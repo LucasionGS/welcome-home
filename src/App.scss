@@ -1,0 +1,15 @@
+.main-app {
+  background: #1b1b1b;
+  min-height: 100vh;
+}
+
+.main-app-header {
+  padding: 10px;
+  box-sizing: border-box;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  background: #0b0b0b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
