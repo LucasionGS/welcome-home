@@ -1,7 +1,8 @@
-import { Button, Chip, Chips, Group, Modal, Text, Textarea, TextInput } from "@mantine/core";
+import { Button, Checkbox, Chip, Chips, Group, Modal, Text, Textarea, TextInput } from "@mantine/core";
+import RichTextEditor from "@mantine/rte";
 import React, { useRef } from "react";
 import Api from "../../api/Api";
-import { WebCard } from "../../models/WebCard";
+import { WebCard, WebCardModel } from "../../models/WebCard";
 import "./CreateWebCard.scss";
 
 interface CreateWebCardProps {
@@ -18,6 +19,8 @@ interface CreateWebCardProps {
    */
   titleText?: string;
 
+  fullWidth?: boolean;
+
   /**
    * Executes when a new WebCard is created or an existing WebCard is updated.
    */
@@ -25,8 +28,15 @@ interface CreateWebCardProps {
 }
 
 export default function CreateWebCard(props: CreateWebCardProps) {
+  function getValue<T extends keyof WebCardModel>(key: T, defaultValue?: WebCardModel[T]): WebCardModel[T] {
+    if (props.updateWebCard) {
+      return (props.updateWebCard[key] ?? (defaultValue ?? null)) as WebCardModel[T];
+    }
+    return defaultValue;
+  }
   const [opened, setOpened] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+  const [descriptionText, setDescriptionText] = React.useState(getValue("description"));
 
   const form = useRef<HTMLFormElement>();
 
@@ -39,6 +49,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
           setLoading(false);
         }}
         title={props.titleText ? props.titleText : "Create a new Web Card"}
+        size={720}
       >
         <form ref={form} onSubmit={async e => {
           e.preventDefault();
@@ -46,13 +57,14 @@ export default function CreateWebCard(props: CreateWebCardProps) {
 
           const formData = new FormData(form.current);
 
-          // if (id && !isNaN(id)) {
+
           if (props.updateWebCard) {
             props.updateWebCard.title = formData.get("title") as string;
             props.updateWebCard.description = formData.get("description") as string;
             props.updateWebCard.url = formData.get("url") as string;
             props.updateWebCard.image = formData.get("image") as string;
             props.updateWebCard.target = formData.get("target") as string;
+            props.updateWebCard.checkAvailable = formData.has("checkAvailable");
             await Api.updateWebCard(props.updateWebCard);
             if (typeof props.onCreate === "function") props.onCreate(props.updateWebCard);
           }
@@ -63,6 +75,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
               url: formData.get("url") as string,
               image: formData.get("image") as string,
               target: formData.get("target") as string,
+              checkAvailable: formData.has("checkAvailable"),
             });
             if (typeof props.onCreate === "function") props.onCreate(props.updateWebCard);
           }
@@ -72,14 +85,66 @@ export default function CreateWebCard(props: CreateWebCardProps) {
         }}>
           <Group position="left" direction="column" grow>
             {/* <NumberInput hidden name="id" value={props.updateWebCard ? props.updateWebCard.id : null} /> */}
-            <TextInput required name="title" label="Title" defaultValue={props.updateWebCard ? props.updateWebCard.title : null} />
-            <Textarea name="description" label="Description" defaultValue={props.updateWebCard ? props.updateWebCard.description : null} />
-            <TextInput required type="url" name="url" label="Url" defaultValue={props.updateWebCard ? props.updateWebCard.url : null} />
-            <TextInput name="image" label="Image URL" defaultValue={props.updateWebCard ? props.updateWebCard.image : null} />
-            <Chips name="target" defaultValue={props.updateWebCard && props.updateWebCard.target ? props.updateWebCard.target : "_self"}>
+            <TextInput required name="title" label="Title" defaultValue={getValue("title")} />
+            <Textarea readOnly style={{ display: "none" }} name="description" label="Description" value={descriptionText} />
+            <Text weight={"bold"} size="sm">Description</Text>
+            <RichTextEditor
+              onChange={setDescriptionText}
+              value={descriptionText}
+              onImageUpload={async (file: File) => {
+                const data = await Api.uploadImage(file);
+                if (data) {
+                  return data.url;
+                }
+                else {
+                  return null;
+                }
+              }}
+              controls={[
+                [
+                  "bold",
+                  "italic",
+                  "underline",
+                  "strike",
+                  "link",
+                  "blockquote",
+                  "code",
+                ],
+                [
+                  "image",
+                  "video",
+                ],
+                [
+                  "unorderedList",
+                  "orderedList",
+                ],
+                [
+                  "h1",
+                  "h2",
+                  "h3",
+                ],
+                [
+                  "sup",
+                  "sub",
+                ],
+                [
+                  "alignLeft",
+                  "alignCenter",
+                  "alignRight",
+                ]
+              ]}
+            />
+            <TextInput required type="url" name="url" label="Url" defaultValue={getValue("url")} />
+            <TextInput name="image" label="Image URL" defaultValue={getValue("image")} />
+            <Chips name="target" defaultValue={getValue("target", "_self")}>
               <Chip value="_self">Same Tab</Chip>
               <Chip value="_blank">New Tab</Chip>
             </Chips>
+            <Checkbox
+              name="checkAvailable"
+              label="Check availability"
+              title="If checked, will give status message for the site on load"
+              defaultChecked={getValue("checkAvailable", true)} />
           </Group>
           <br />
           <Group grow>
@@ -104,7 +169,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
         </form>
       </Modal>
 
-      <Button className="create-web-card-button" onClick={() => setOpened(true)}>{props.buttonText ? props.buttonText : "Create Web Card"}</Button>
+      <Button fullWidth={props.fullWidth} className="create-web-card-button" onClick={() => setOpened(true)}>{props.buttonText ? props.buttonText : "Create Web Card"}</Button>
       {/* <Group position="center">
       </Group> */}
     </div>

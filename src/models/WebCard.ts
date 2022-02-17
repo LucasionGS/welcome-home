@@ -4,6 +4,7 @@ export interface WebCardCreateModel {
   url: string;
   image?: string;
   target?: string;
+  checkAvailable?: boolean;
 }
 
 export interface WebCardModel {
@@ -13,6 +14,8 @@ export interface WebCardModel {
   url: string;
   image?: string;
   target?: string;
+  checkAvailable?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -24,18 +27,17 @@ export class WebCard {
   public url: string;
   public image: string = null;
   public target: string;
+  public checkAvailable: boolean;
+
   public createdAt?: Date;
   public updatedAt?: Date;
   
   constructor(
     model: WebCardModel,
   ) {
-    this.id = model.id;
-    this.title = model.title;
-    this.description = model.description;
-    this.url = model.url;
-    this.image = model.image;
-    this.target = model.target;
+    Object.assign(this, model);
+
+    // Convert to date
     this.createdAt = new Date(model.createdAt);
     this.updatedAt = new Date(model.updatedAt);
   }

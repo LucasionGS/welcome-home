@@ -1,11 +1,6 @@
-.web-card {
-  .create-web-card-button {
-    opacity: 0;
-  }
-  &:hover {
-    .create-web-card-button {
-      opacity: 1;
-      cursor: pointer;
-    }
+.web-card, .web-card * {
+  transition: all 0.3s ease-in-out;
+  .web-card-description img {
+    max-width: 100%;
   }
 }

@@ -1,8 +1,10 @@
 import React, { Component } from "react";
 import "./WebCard.scss";
 import { WebCard as WebCardItem } from "../../models/WebCard";
-import { Anchor, Button, Card, Group, Image, Progress, Text } from "@mantine/core";
+import { Anchor, Button, Card, Group, Image, Progress, Spoiler, Text } from "@mantine/core";
 import CreateWebCard from "../CreateWebCard/CreateWebCard";
+import { isEditMode } from "../../helper";
+import htmlParser from "react-html-parser";
 
 interface WebCardProps {
   webCard: WebCardItem;
@@ -17,22 +19,33 @@ interface WebCardState {
 
 export enum ViewMode {
   Block,
-  // Simple,
-  Full
+  List,
+  Full,
+  Simple,
 }
+
+const editMode = isEditMode();
 
 export default class WebCard extends Component<WebCardProps, WebCardState> {
   constructor(props: WebCardProps) {
     super(props);
     this.state = {
       webCard: props.webCard,
-      availability: null,
+      availability: undefined,
       availabilityError: null,
       // viewMode: props.viewMode
     };
   }
 
   public checkSiteAvailability() {
+    console.log("Checking availability...");
+
+    if (this.state.availability === null) {
+      return;
+    }
+    if (!this.state.webCard.checkAvailable) {
+      return this.setState({ availability: null, availabilityError: null });
+    }
     const url = this.state.webCard.url;
     if (url) {
       fetch(url, {
@@ -64,24 +77,46 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
 
   componentDidUpdate(prevProps: Readonly<WebCardProps>, prevState: Readonly<WebCardState>, snapshot?: any): void {
     if (this.state.webCard && prevState.webCard) {
-      if (typeof this.state.availability !== "boolean") {
+      if (this.state.availability === undefined) {
         this.checkSiteAvailability();
       }
     }
   }
 
   displayAvailablity() {
+    if (this.state.availability === null) {
+      return null;
+    }
     const hasStatus = typeof this.state.availability === "boolean";
     return (
-      <Progress title={hasStatus ? this.state.availabilityError : "Checking availability..."} value={hasStatus ? 100 : 0} color={this.state.availability ? "green" : "red"} />
+      <Progress
+        title={hasStatus ? this.state.availabilityError : "Checking availability..."}
+        value={hasStatus ? 100 : 33}
+        color={this.state.availability ? "green" : "red"}
+        animate={hasStatus}
+      />
     )
+  }
+
+  parseDescription() {
+    if (this.state.webCard) {
+      return htmlParser(this.state.webCard.description, {
+        transform: (node, index) => {
+          if (node.type === "tag") {
+            if (node.name === "a") {
+              return (
+                <Anchor href={node.attribs.href}>{node.children[0].data}</Anchor>
+              );
+            }
+          }
+        }
+      });
+    }
+    return null;
   }
 
   render() {
     const webCard = this.state.webCard;
-
-    console.log(this.state);
-
 
     if (!webCard) {
       return null;
@@ -90,11 +125,12 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
     switch (this.props.viewMode) {
       case ViewMode.Block:
         return this.viewBlock(webCard);
-      // case ViewMode.Simple: // Currently inactive
-      //   return this.viewSimple(webCard);
+      case ViewMode.Simple:
+        return this.viewSimple(webCard);
       case ViewMode.Full:
         return this.viewFull(webCard);
-
+      case ViewMode.List:
+        return this.viewList(webCard);
       default:
         return this.viewBlock(webCard);
     }
@@ -102,36 +138,57 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
 
   private viewBlock(webCard: WebCardItem) {
     return <div className="web-card" style={{ width: 340, margin: 'auto' }}>
-      <Card shadow="sm" padding="lg">
-        {webCard.image ? (<Card.Section
-          style={{
-            marginBottom: '1rem',
-            padding: "4px"
-          }}
-        >
-          <Anchor href={webCard.url} target={webCard.target}>
-            <Image fit="contain" src={webCard.image} height={160} alt="Web preview" />
-          </Anchor>
-        </Card.Section>) : null}
+      <Card shadow="sm" padding="lg" style={{ width: 340, minHeight: 375 }}>
+        <Anchor href={webCard.url} target={webCard.target}>
+          <Card.Section
+            style={{
+              marginBottom: '1rem',
+              height: 160,
+              backgroundColor: webCard.image ? undefined : "#f5f5f50f",
+              borderRadius: 5,
+              overflow: "hidden",
+            }}
+          >
+            {webCard.image ? (
+              <Image fit="contain" src={webCard.image} height={160} alt="Web preview" />
+            ) : null}
+          </Card.Section>
+        </Anchor>
 
         <Group position="apart" style={{ marginBottom: 5 }}>
-          <Text weight={500}>{webCard.title}</Text>
-          <CreateWebCard
-          updateWebCard={webCard}
-          titleText="Update Webcard"
-          buttonText="Update"
-          onCreate={(webCard) => this.setState({ webCard, availability: null, availabilityError: null })} />
+          <Text style={{
+            fontSize: '1.5rem',
+          }} weight={500}>{webCard.title}</Text>
         </Group>
 
-        <Text size="sm" style={{ lineHeight: 1.5 }}>
-          {webCard.description}
-        </Text>
+        <Spoiler maxHeight={48} showLabel="Expand" hideLabel="Collapse" style={{
+          minHeight: "4.8rem",
+        }}>
+          <Text size="sm" style={{ minHeight: 48, lineHeight: 1 }}>
+            <div className="web-card-description" style={{
+              paddingBottom: "0.4rem",
+            }}>
+              {this.parseDescription()}
+            </div>
+          </Text>
+        </Spoiler>
 
-        <Anchor href={webCard.url} target={webCard.target}>
-          <Button variant="light" color="blue" fullWidth style={{ marginTop: 14 }}>
-            Go to site
-          </Button>
-        </Anchor>
+        {
+          editMode ? (
+            <CreateWebCard
+              fullWidth
+              updateWebCard={webCard}
+              titleText="Update Webcard"
+              buttonText="Update"
+              onCreate={(webCard) => this.setState({ webCard, availability: undefined, availabilityError: null })} />
+          )
+            :
+            (<Anchor href={webCard.url} target={webCard.target}>
+              <Button variant="light" color="blue" fullWidth style={{ marginTop: 14 }}>
+                Go to site
+              </Button>
+            </Anchor>)
+        }
         {this.displayAvailablity()}
       </Card>
     </div>;
@@ -141,15 +198,20 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
     return <div className="web-card" style={{ margin: 'auto', maxWidth: "80%", }}>
       <Card shadow="sm" padding="lg">
         <Group>
-          {webCard.image ? (<Card.Section style={{
-            display: "inline-block",
-            width: 160,
-          }}>
-            <Anchor href={webCard.url} target={webCard.target}>
-              <Image fit="contain" src={webCard.image} height={160} alt="Web preview" />
-            </Anchor>
-          </Card.Section>) : null}
-
+          <Anchor href={webCard.url} target={webCard.target}>
+            <Card.Section style={{
+              display: "inline-block",
+              width: 160,
+              height: 160,
+              backgroundColor: webCard.image ? undefined : "#f5f5f50f",
+              borderRadius: 5,
+              overflow: "hidden",
+            }}>
+              {webCard.image ? (
+                <Image fit="contain" src={webCard.image} height={160} alt="Web preview" />
+              ) : null}
+            </Card.Section>
+          </Anchor>
 
           <Group position="apart" style={{ marginBottom: 5 }} direction="column">
             <Anchor href={webCard.url} target={webCard.target}>
@@ -157,9 +219,20 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
                 fontSize: "2rem",
               }} weight={500}>{webCard.title}</Text>
             </Anchor>
-            <Group position="center" style={{ width: "100%" }}>
-              <CreateWebCard updateWebCard={webCard} titleText="Update Webcard" buttonText="Update" onCreate={(webCard) => this.setState({ webCard })} />
-            </Group>
+            {
+              editMode ? (
+                <Group position="center" style={{ width: "100%" }}>
+                  <CreateWebCard
+                    fullWidth
+                    updateWebCard={webCard}
+                    titleText="Update Webcard"
+                    buttonText="Update"
+                    onCreate={(webCard) => this.setState({ webCard, availability: undefined, availabilityError: null })}
+                  />
+                </Group>
+              )
+                : null
+            }
           </Group>
         </Group>
         {this.displayAvailablity()}
@@ -170,28 +243,112 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
   private viewFull(webCard: WebCardItem) {
     return <div className="web-card" style={{ width: "90%", margin: 'auto' }}>
       <Card shadow="sm" padding="lg">
-        {webCard.image ? (<Card.Section>
-          <Anchor href={webCard.url} target={webCard.target}>
-            <Image src={webCard.image} height={160} alt="Web preview" />
-          </Anchor>
-        </Card.Section>) : null}
+        <Anchor style={{
+          display: "block",
+          padding: 0,
+          margin: 0,
+        }} href={webCard.url} target={webCard.target}>
+          <Card.Section style={{
+            height: 160,
+            backgroundColor: webCard.image ? undefined : "#f5f5f50f",
+            borderRadius: 5,
+            overflow: "hidden",
+          }}>
+            {webCard.image ? (
+              <Image src={webCard.image} height={160} alt="Web preview" />
+            ) : null}
+          </Card.Section>
+        </Anchor>
 
         <Group position="apart" style={{ marginBottom: 5 }}>
           <Text weight={500} style={{
             fontSize: "2rem",
           }}>{webCard.title}</Text>
-          <CreateWebCard updateWebCard={webCard} titleText="Update Webcard" buttonText="Update" onCreate={(webCard) => this.setState({ webCard })} />
         </Group>
 
-        <Text size="sm" style={{ lineHeight: 1.5 }}>
-          {webCard.description}
-        </Text>
+        <Spoiler maxHeight={48} showLabel="Expand" hideLabel="Collapse" style={{
+          minHeight: "4.8rem",
+        }}>
+          <Text size="sm" style={{ minHeight: 48, lineHeight: 1 }}>
+            <div className="web-card-description" style={{
+              paddingBottom: "0.4rem",
+            }}>
+              {this.parseDescription()}
+            </div>
+          </Text>
+        </Spoiler>
 
+        {
+          editMode ? (
+            <CreateWebCard
+              fullWidth
+              updateWebCard={webCard}
+              titleText="Update Webcard"
+              buttonText="Update"
+              onCreate={(webCard) => this.setState({ webCard, availability: undefined, availabilityError: null })} />
+          )
+            :
+            (<Anchor href={webCard.url} target={webCard.target}>
+              <Button variant="light" color="blue" fullWidth style={{ marginTop: 14 }}>
+                Go to site
+              </Button>
+            </Anchor>)
+        }
+        {this.displayAvailablity()}
+      </Card>
+    </div>;
+  }
+
+  private viewList(webCard: WebCardItem) {
+    return <div className="web-card" style={{ width: "45%", margin: 'auto' }}>
+      <Card shadow="sm" padding="lg">
         <Anchor href={webCard.url} target={webCard.target}>
-          <Button variant="light" color="blue" fullWidth style={{ marginTop: 14 }}>
-            Go to site
-          </Button>
+          <Card.Section style={{
+            height: 160,
+            backgroundColor: webCard.image ? undefined : "#f5f5f50f",
+            borderRadius: 5,
+            overflow: "hidden",
+          }}>
+            {webCard.image ? (
+              <Image src={webCard.image} height={160} alt="Web preview" />
+            ) : null}
+          </Card.Section>
         </Anchor>
+
+        <Group position="apart" style={{ marginBottom: 5 }}>
+          <Text weight={500} style={{
+            fontSize: "2rem",
+          }}>{webCard.title}</Text>
+        </Group>
+
+        <Spoiler maxHeight={48} showLabel="Expand" hideLabel="Collapse" style={{
+          minHeight: "4.8rem",
+        }}>
+          <Text size="sm" style={{ minHeight: 48, lineHeight: 1 }}>
+            <div className="web-card-description" style={{
+              paddingBottom: "0.4rem",
+            }}>
+              {this.parseDescription()}
+            </div>
+          </Text>
+        </Spoiler>
+
+        {
+          editMode ? (
+            <CreateWebCard
+              fullWidth
+              updateWebCard={webCard}
+              titleText="Update Webcard"
+              buttonText="Update"
+              onCreate={(webCard) => this.setState({ webCard, availability: undefined, availabilityError: null })} />
+          )
+            :
+            (<Anchor href={webCard.url} target={webCard.target}>
+              <Button variant="light" color="blue" fullWidth style={{ marginTop: 14 }}>
+                Go to site
+              </Button>
+            </Anchor>)
+        }
         {this.displayAvailablity()}
       </Card>
     </div>;

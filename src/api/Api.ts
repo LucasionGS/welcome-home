@@ -1,15 +1,22 @@
+import { isDev } from "../helper";
 import { WebCard, WebCardCreateModel, WebCardModel } from "../models/WebCard";
+import { Image, ImageModel } from "../models/Image";
 
 namespace Api {
 
-  const baseUrl = "http://192.168.0.31:3000/api";
-  
+  // Dev mode should use local server
+  // Production mode should use current protocol, domain, port, with /api
+  export const baseUrl = isDev() ? "http://192.168.0.31:3000"
+    : `${window.location.protocol}//${window.location.host}${window.location.port ? `:${window.location.port}` : ""}`;
+  export const baseUrlApi = `${baseUrl}/api`;
+  export const baseUrlUploads = `${baseUrl}/uploads`;
+
   /**
    * Handle the API response. Throw an error if the response is not valid.
    * @param response Response object
    * @returns 
    */
-  async function handleResponse<T = any>(response: Response): Promise<any> {
+  async function handleResponse<T = any>(response: Response): Promise<T> {
     if (response.ok) {
       return response.json() as Promise<T>;
     }
@@ -29,18 +36,18 @@ namespace Api {
       throw new Error("Unknown error");
     }
   }
-  
+
   //
   // Fetch methods
   //
 
   export async function _post<T = any>(url: string, body?: any): Promise<T> {
     const bearer = localStorage.getItem("token");
-    const res = await fetch(baseUrl + url, {
+    const res = await fetch(baseUrlApi + url, {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": bearer ? `Bearer ${bearer}`: null
+        "Authorization": bearer ? `Bearer ${bearer}` : null
       },
       method: "POST",
       body: body ? JSON.stringify(body) : null
@@ -51,11 +58,11 @@ namespace Api {
 
   export async function _put<T = any>(url: string, body?: any): Promise<T> {
     const bearer = localStorage.getItem("token");
-    const res = await fetch(baseUrl + url, {
+    const res = await fetch(baseUrlApi + url, {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": bearer ? `Bearer ${bearer}`: null
+        "Authorization": bearer ? `Bearer ${bearer}` : null
       },
       method: "PUT",
       body: body ? JSON.stringify(body) : null
@@ -72,11 +79,11 @@ namespace Api {
         param.append(key, String(params[key]));
       }
     }
-    const res = await fetch(baseUrl + url + "?" + param.toString(), {
+    const res = await fetch(baseUrlApi + url + "?" + param.toString(), {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": bearer ? `Bearer ${bearer}`: null
+        "Authorization": bearer ? `Bearer ${bearer}` : null
       },
       method: "GET",
     });
@@ -92,16 +99,33 @@ namespace Api {
         param.append(key, String(params[key]));
       }
     }
-    const res = await fetch(baseUrl + url + "?" + param.toString(), {
+    const res = await fetch(baseUrlApi + url + "?" + param.toString(), {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": bearer ? `Bearer ${bearer}`: null
+        "Authorization": bearer ? `Bearer ${bearer}` : null
       },
       method: "DELETE",
     });
 
     return handleResponse<T>(res);
+  }
+
+  export async function uploadImage(file: File) {
+    const data = new FormData();
+    data.append("image", file);
+    const response = await fetch(baseUrlApi + "/image", {
+      method: "POST",
+      body: data,
+    });
+    const img = await handleResponse<ImageModel>(response);
+    if (img) {
+      return {
+        url: Api.baseUrlUploads + "/" + img.path,
+        image: img,
+      };
+    }
+    return null;
   }
 
 
@@ -113,7 +137,7 @@ namespace Api {
     key: string;
     value: string;
   }
-  
+
   export async function getOption(key: string) {
     return await _get<SiteOption>("/option/" + key);
   }
