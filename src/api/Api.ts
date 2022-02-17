@@ -6,7 +6,7 @@ namespace Api {
 
   // Dev mode should use local server
   // Production mode should use current protocol, domain, port, with /api
-  export const baseUrl = isDev() ? "http://192.168.0.31:3000"
+  export const baseUrl = isDev() ? "http://192.168.0.31:4321"
     : `${window.location.protocol}//${window.location.host}`;
   export const baseUrlApi = `${baseUrl}/api`;
   export const baseUrlUploads = `${baseUrl}/uploads`;
