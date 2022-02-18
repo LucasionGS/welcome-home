@@ -5,6 +5,7 @@ export interface WebCardCreateModel {
   image?: string;
   target?: string;
   checkAvailable?: boolean;
+  position?: number;
 }
 
 export interface WebCardModel {
@@ -15,6 +16,7 @@ export interface WebCardModel {
   image?: string;
   target?: string;
   checkAvailable?: boolean;
+  position?: number;
 
   createdAt?: string;
   updatedAt?: string;
@@ -28,6 +30,7 @@ export class WebCard {
   public image: string = null;
   public target: string;
   public checkAvailable: boolean;
+  public position: number;
 
   public createdAt?: Date;
   public updatedAt?: Date;

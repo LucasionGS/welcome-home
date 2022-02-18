@@ -154,6 +154,17 @@ namespace Api {
     return await _post<WebCardModel>("/webcard", wc).then(wc => new WebCard(wc));
   }
 
+  export function sortWebCards(wcs: WebCard[]) {
+    wcs.sort((a, b) => a.position - b.position);
+  }
+
+  export function submitWebCardsOrder(wcs: WebCard[]) {
+    const wcIds = wcs.map(wc => wc.id);
+    return _post("/webcard/order", {
+      ids: wcIds
+    });
+  }
+
   export async function updateWebCard(wc: WebCard): Promise<WebCard> {
     return await _put<WebCardModel>("/webcard/" + wc.id, wc).then(wc => new WebCard(wc));
   }

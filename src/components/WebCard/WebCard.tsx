@@ -5,6 +5,7 @@ import { Anchor, Button, Card, Group, Image, Progress, Spoiler, Text } from "@ma
 import CreateWebCard from "../CreateWebCard/CreateWebCard";
 import { isEditMode } from "../../helper";
 import htmlParser from "react-html-parser";
+import Api from "../../api/Api";
 
 interface WebCardProps {
   webCard: WebCardItem;
@@ -115,6 +116,15 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
     return null;
   }
 
+  getImageUrl() {
+    const url = this.state.webCard?.image;
+    console.log(url, this.state.webCard.title);
+    if (url?.startsWith("/uploads")) {
+      return `${Api.baseUrl}${url}`;
+    }
+    return url;
+  }
+
   render() {
     const webCard = this.state.webCard;
 
@@ -150,7 +160,7 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
             }}
           >
             {webCard.image ? (
-              <Image fit="contain" src={webCard.image} height={160} alt="Web preview" />
+              <Image fit="contain" src={this.getImageUrl()} height={160} alt="Web preview" />
             ) : null}
           </Card.Section>
         </Anchor>
@@ -208,7 +218,7 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
               overflow: "hidden",
             }}>
               {webCard.image ? (
-                <Image fit="contain" src={webCard.image} height={160} alt="Web preview" />
+                <Image fit="contain" src={this.getImageUrl()} height={160} alt="Web preview" />
               ) : null}
             </Card.Section>
           </Anchor>
@@ -255,7 +265,7 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
             overflow: "hidden",
           }}>
             {webCard.image ? (
-              <Image src={webCard.image} height={160} alt="Web preview" />
+              <Image src={this.getImageUrl()} height={160} alt="Web preview" />
             ) : null}
           </Card.Section>
         </Anchor>
@@ -310,7 +320,7 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
             overflow: "hidden",
           }}>
             {webCard.image ? (
-              <Image src={webCard.image} height={160} alt="Web preview" />
+              <Image src={this.getImageUrl()} height={160} alt="Web preview" />
             ) : null}
           </Card.Section>
         </Anchor>
