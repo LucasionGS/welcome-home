@@ -11,6 +11,7 @@ import { Footer } from "./components/Footer/Footer";
 
 function Setup() {
   const [dialect, setDialect] = React.useState<keyof Api.SqlDialects>("mysql");
+  const [loading, setLoading] = React.useState(false);
   const ref = {
     dbDialect: React.useRef<HTMLInputElement>(),
 
@@ -97,8 +98,10 @@ function Setup() {
             <UseDialect />
 
             <Button
+              loading={loading}
               color="green"
               onClick={async () => {
+                setLoading(true);
                 switch (dialect) {
                   case "mysql":
                     await Api.createConfig(dialect, {
@@ -115,7 +118,10 @@ function Setup() {
                       storage: ref.sqliteStorage.current.value,
                     });
                 }
-                window.location.href = "/";
+                setTimeout(() => {
+                  setLoading(false);
+                  window.location.href = "/";
+                }, 2000); // Wait for the server to properly restart
               }}
             >
               Finalize
