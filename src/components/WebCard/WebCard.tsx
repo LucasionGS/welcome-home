@@ -63,10 +63,10 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
             availabilityError: response.statusText
           });
         }
-      }).catch(() => {
+      }).catch((err) => {
         this.setState({
           availability: false,
-          availabilityError: "Could not connect to the site"
+          availabilityError: err ? err.message : "Could not connect to the site"
         });
       });
     }

@@ -6,7 +6,7 @@ namespace Api {
 
   // Dev mode should use local server
   // Production mode should use current protocol, domain, port, with /api
-  export const baseUrl = isDev() ? "http://192.168.0.31:4321"
+  export const baseUrl = isDev() ? "http://192.168.0.31:3000"
     : `${window.location.protocol}//${window.location.host}`;
   export const baseUrlApi = `${baseUrl}/api`;
   export const baseUrlUploads = `${baseUrl}/uploads`;
@@ -171,6 +171,35 @@ namespace Api {
 
   export async function deleteWebCard(id: number): Promise<void> {
     return await _delete<void>("/webcard/" + id);
+  }
+
+  export interface SqlDialects {
+    mysql: {
+      host: string;
+      port: number;
+      username: string;
+      password: string;
+      database: string;
+    },
+
+    sqlite: {
+      storage: string;
+      /**
+       * Only `true` if no config file exists.
+       */
+      __defaultConfig?: boolean;
+    },
+  }
+
+  export async function createConfig<T extends keyof SqlDialects>(dialect: T, config: SqlDialects[T]) {
+    return await _post("/config", {
+      dialect,
+      config
+    });
+  }
+
+  export async function getConfig<T extends keyof SqlDialects = keyof SqlDialects>() {
+    return await _get<SqlDialects[T]>("/config");
   }
 }
 

@@ -1,7 +1,7 @@
 import React from "react";
 import "./App.scss";
 import CreateWebCard from "./components/CreateWebCard/CreateWebCard";
-import { Affix, Anchor, Button, Center, Container, Group, Loader, MantineProvider, Slider, Text, Transition } from "@mantine/core";
+import { Affix, Alert, Button, Center, Group, Loader, MantineProvider, Slider, Text, Transition } from "@mantine/core";
 import CustomTitle from "./components/CustomTitle/CustomTitle";
 import { WebCard as WebCardItem } from "./models/WebCard";
 import WebCard, { ViewMode } from "./components/WebCard/WebCard";
@@ -10,13 +10,27 @@ import { isEditMode, toggleEditMode } from "./helper";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import fontAwesome from "@fortawesome/fontawesome";
 import { faCheck, faPen } from "@fortawesome/free-solid-svg-icons";
-import { useWindowScroll } from "@mantine/hooks";
+import { Footer } from "./components/Footer/Footer";
 
 fontAwesome.library.add(faCheck as any, faPen as any);
 
 const editMode = isEditMode();
+let isMemoryMode: boolean;
 
 function App() {
+  const [__upd, _update] = React.useState(0);
+  const update = () => _update(__upd + 1);
+
+  if (isMemoryMode === undefined) {
+    isMemoryMode = null; // So it only runs once
+    Api.getConfig<"sqlite">().then(config => {
+      // console.log(config);
+      isMemoryMode = (config?.__defaultConfig === true)
+      update();
+    });
+  }
+
+
   const [webCards, setWebCards] = React.useState<WebCardItem[]>(null);
   const [view, setView] = React.useState<ViewMode>(+window.localStorage.getItem("view") ?? ViewMode.Block);
 
@@ -57,6 +71,21 @@ function App() {
             </Button>
           </Group>
         </header>
+        <Alert hidden={!isMemoryMode} title="No database configured" color="red">
+          No database has been configured. Go to setup to config the server to have your changes persist.
+          <Group>
+            <Button
+              color="green"
+              onClick={() => {
+                window.location.href = "/setup";
+              }}
+            >Setup</Button>
+          </Group>
+        </Alert>
+        {/* {
+          isMemoryMode ? (
+          ) : null
+        } */}
 
         <div style={{
           width: `${viewValues.length * 48}px`,
@@ -91,41 +120,6 @@ function App() {
       </div>
     </MantineProvider>
   );
-}
-
-function Footer() {
-  // const [scroll, setScroll] = useWindowScroll();
-
-  return (
-    <Container fluid mt={64}>
-      <Group grow>
-        <Text
-          align="left"
-          style={{
-            color: "white",
-          }}
-        >
-          <Text>Welcome Home™️</Text>
-          <Text>
-              Developed by <Anchor href="https://github.com/LucasionGS">Lucasion</Anchor>
-          </Text>
-        </Text>
-
-        <Text
-          align="right"
-          style={{
-            color: "white",
-          }}
-        >
-          <Text>Open Source Project</Text>
-          <Anchor href="https://github.com/LucasionGS/welcome-home">
-            <Text>Share the GitHub Repository</Text>
-          </Anchor>
-        </Text>
-
-      </Group>
-    </Container>
-  )
 }
 
 export default App;
