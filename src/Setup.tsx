@@ -10,7 +10,7 @@ import { Footer } from "./components/Footer/Footer";
 // fontAwesome.library.add(faCheck as any, faPen as any);
 
 function Setup() {
-  const [dialect, setDialect] = React.useState<keyof Api.SqlDialects>("mysql");
+  const [dialect, setDialect] = React.useState<keyof Api.SqlDialects>("sqlite");
   const [loading, setLoading] = React.useState(false);
   const ref = {
     dbDialect: React.useRef<HTMLInputElement>(),
