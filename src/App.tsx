@@ -17,6 +17,10 @@ fontAwesome.library.add(faCheck as any, faPen as any);
 const editMode = isEditMode();
 let isMemoryMode: boolean;
 
+Api.Docker.isDocker().then(c => {
+  console.log(c);
+});
+
 function App() {
   const [__upd, _update] = React.useState(0);
   const update = () => _update(__upd + 1);
@@ -29,7 +33,6 @@ function App() {
       update();
     });
   }
-
 
   const [webCards, setWebCards] = React.useState<WebCardItem[]>(null);
   const [view, setView] = React.useState<ViewMode>(+window.localStorage.getItem("view") ?? ViewMode.Block);
