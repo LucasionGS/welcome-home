@@ -201,6 +201,10 @@ namespace Api {
   export async function getConfig<T extends keyof SqlDialects = keyof SqlDialects>() {
     return await _get<SqlDialects[T]>("/config");
   }
+
+  export async function login(username: string, password: string) {
+    return await _post<string>("/login", { username, password });
+  }
 }
 
 export default Api;
