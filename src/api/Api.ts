@@ -206,12 +206,25 @@ namespace Api {
     return await _post<string>("/user/login", { username, password });
   }
 
+  export async function getUptime() {
+    return await _get<{
+      uptime: number;
+    }>("/server/uptime");
+  }
+
   // Docker specific endpoints
   export namespace Docker {
     export async function isDocker() {
       return await _get<{
         docker: boolean;
       }>("/server/is-docker");
+    }
+
+    /**
+     * Update and rebuild the server from GitHub.
+     */
+    export async function update() {
+      return await _post<void>("/docker/update");
     }
   }
 }

@@ -11,15 +11,12 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import fontAwesome from "@fortawesome/fontawesome";
 import { faCheck, faPen } from "@fortawesome/free-solid-svg-icons";
 import { Footer } from "./components/Footer/Footer";
+import UpdateModal from "./components/UpdateModal/UpdateModal";
 
 fontAwesome.library.add(faCheck as any, faPen as any);
 
 const editMode = isEditMode();
 let isMemoryMode: boolean;
-
-Api.Docker.isDocker().then(c => {
-  console.log(c);
-});
 
 function App() {
   const [__upd, _update] = React.useState(0);
@@ -33,6 +30,14 @@ function App() {
       update();
     });
   }
+
+  const [isDocker, setIsDocker] = React.useState(null);
+  if (isDocker === null) {
+    Api.Docker.isDocker().then(c => {
+      setIsDocker(c.docker);
+    });
+  }
+
 
   const [webCards, setWebCards] = React.useState<WebCardItem[]>(null);
   const [view, setView] = React.useState<ViewMode>(+window.localStorage.getItem("view") ?? ViewMode.Block);
@@ -53,7 +58,11 @@ function App() {
         <header className="main-app-header">
           <CustomTitle />
           <Group>
-
+            {
+              isDocker === null ? <Loader />
+                : isDocker === true ? <UpdateModal />
+                  : null
+            }
             {
               editMode ? (
                 <CreateWebCard onCreate={wc => {
