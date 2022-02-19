@@ -87,8 +87,8 @@ function Setup() {
               label="Database Dialect"
               value={dialect}
               data={[
-                { value: "mysql", label: "MySQL / MariaDB" },
                 { value: "sqlite", label: "SQLite" },
+                { value: "mysql", label: "MySQL / MariaDB" },
               ]}
               ref={ref.dbDialect}
               onChange={(value) => {
