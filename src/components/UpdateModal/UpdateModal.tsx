@@ -1,15 +1,24 @@
-import { Button, Modal } from "@mantine/core";
+import { Button, Loader, Modal } from "@mantine/core";
 import React from "react";
 import Api from "../../api/Api";
+import { isEditMode } from "../../helper";
 import "./UpdateModal.scss";
 
 interface UpdateModalProps { }
 
 let uptime = 0;
+const editMode = isEditMode();
 
 export default function UpdateModal(props: UpdateModalProps) {
   const [opened, setOpened] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+
+  const [isDocker, setIsDocker] = React.useState(null);
+  if (isDocker === null) {
+    Api.Docker.isDocker().then(c => {
+      setIsDocker(c.docker);
+    });
+  }
 
   async function startUpdate() {
     setLoading(true);
@@ -53,7 +62,13 @@ export default function UpdateModal(props: UpdateModalProps) {
         </p>
       </Modal>
 
-      <Button color="red" onClick={() => setOpened(true)}>Rebuild server and UI</Button>
+      {
+        editMode ? (
+          isDocker === null ? <Loader />
+            : isDocker === true ? <Button color="red" onClick={() => setOpened(true)}>Update Server</Button>
+              : null
+        ) : null
+      }
     </>
   )
 }

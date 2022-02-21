@@ -65,6 +65,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
             props.updateWebCard.image = formData.get("image") as string;
             props.updateWebCard.target = formData.get("target") as string;
             props.updateWebCard.checkAvailable = formData.has("checkAvailable");
+            props.updateWebCard.category = formData.get("category") as string;
             await Api.updateWebCard(props.updateWebCard);
             if (typeof props.onCreate === "function") props.onCreate(props.updateWebCard);
           }
@@ -76,6 +77,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
               image: formData.get("image") as string,
               target: formData.get("target") as string,
               checkAvailable: formData.has("checkAvailable"),
+              category: formData.get("category") as string,
             });
             if (typeof props.onCreate === "function") props.onCreate(props.updateWebCard);
           }
@@ -87,6 +89,20 @@ export default function CreateWebCard(props: CreateWebCardProps) {
             {/* <NumberInput hidden name="id" value={props.updateWebCard ? props.updateWebCard.id : null} /> */}
             <TextInput required name="title" label="Title" defaultValue={getValue("title")} />
             <Textarea readOnly style={{ display: "none" }} name="description" label="Description" value={descriptionText} />
+            <TextInput required type="url" name="url" label="Url" defaultValue={getValue("url")} />
+            <TextInput name="image" label="Icon URL" defaultValue={getValue("image")} />
+            <TextInput name="category" label="Category" defaultValue={getValue("category")} />
+            <Chips name="target" defaultValue={getValue("target", "_self")}>
+              <Chip value="_self">Same Tab</Chip>
+              <Chip value="_blank">New Tab</Chip>
+            </Chips>
+            <Checkbox
+              name="checkAvailable"
+              label="Check availability"
+              title="If checked, will give status message for the site on load"
+              defaultChecked={getValue("checkAvailable", true)}
+            />
+
             <Text weight={"bold"} size="sm">Description</Text>
             <RichTextEditor
               onChange={setDescriptionText}
@@ -134,17 +150,6 @@ export default function CreateWebCard(props: CreateWebCardProps) {
                 ]
               ]}
             />
-            <TextInput required type="url" name="url" label="Url" defaultValue={getValue("url")} />
-            <TextInput name="image" label="Image URL" defaultValue={getValue("image")} />
-            <Chips name="target" defaultValue={getValue("target", "_self")}>
-              <Chip value="_self">Same Tab</Chip>
-              <Chip value="_blank">New Tab</Chip>
-            </Chips>
-            <Checkbox
-              name="checkAvailable"
-              label="Check availability"
-              title="If checked, will give status message for the site on load"
-              defaultChecked={getValue("checkAvailable", true)} />
           </Group>
           <br />
           <Group grow>

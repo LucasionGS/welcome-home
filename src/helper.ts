@@ -12,14 +12,16 @@ export function isProd() {
 }
 
 export function isEditMode() {
-  return window.location.pathname === "/edit";
+  return window.location.pathname.endsWith("/edit");
 }
 
 export function toggleEditMode() {
   if (isEditMode()) {
-    window.location.pathname = "/";
+    window.location.pathname = window.location.pathname.replace(/\/edit$/, "");
   }
   else {
-    window.location.pathname = "/edit";
+    window.location.pathname = window.location.pathname + (
+      window.location.pathname.endsWith("/") ? "" : "/"
+    )  + "edit";
   }
 }

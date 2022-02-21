@@ -1,10 +1,7 @@
 import React from "react";
 import "./App.scss";
-import { Alert, Anchor, Button, Center, Container, Group, Loader, MantineProvider, NumberInput, PasswordInput, Select, Text, TextInput } from "@mantine/core";
+import { Button, Container, Group, MantineProvider, NumberInput, PasswordInput, Select, TextInput } from "@mantine/core";
 import Api from "./api/Api";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import fontAwesome from "@fortawesome/fontawesome";
-import { faCheck, faPen } from "@fortawesome/free-solid-svg-icons";
 import { Footer } from "./components/Footer/Footer";
 
 // fontAwesome.library.add(faCheck as any, faPen as any);

@@ -155,12 +155,14 @@ namespace Api {
   }
 
   export function sortWebCards(wcs: WebCard[]) {
-    wcs.sort((a, b) => a.position - b.position);
+    return wcs.sort((a, b) => a.position - b.position);
   }
 
   export function submitWebCardsOrder(wcs: WebCard[]) {
     const wcIds = wcs.map(wc => wc.id);
-    return _post("/webcard/order", {
+    return _post<{
+      success: boolean;
+    }>("/webcard/order", {
       ids: wcIds
     });
   }
@@ -211,6 +213,11 @@ namespace Api {
       uptime: number;
     }>("/server/uptime");
   }
+  
+  export async function getSystemStats() {
+    const res = await _get<SystemStatsModule.SystemStats>("/server/system-stats");
+    return res;
+  }
 
   // Docker specific endpoints
   export namespace Docker {
@@ -230,3 +237,99 @@ namespace Api {
 }
 
 export default Api;
+
+// Other types
+export declare module SystemStatsModule {
+
+  export interface Cpu {
+    main: number;
+    cores: number[];
+    max: number;
+    socket: number[];
+    chipset?: any;
+  }
+
+  export interface Memory {
+    total: number;
+    free: number;
+    used: number;
+    active: number;
+    available: number;
+    buffers: number;
+    cached: number;
+    slab: number;
+    buffcache: number;
+    swaptotal: number;
+    swapused: number;
+    swapfree: number;
+  }
+
+  export interface OperatingSystem {
+    platform: string;
+    distro: string;
+    release: string;
+    codename: string;
+    kernel: string;
+    arch: string;
+    hostname: string;
+    fqdn: string;
+    codepage: string;
+    logofile: string;
+    serial: string;
+    build: string;
+    servicepack: string;
+    uefi: boolean;
+  }
+
+  export interface FileSystem {
+    fs: string;
+    type: string;
+    size: any;
+    used: any;
+    available: any;
+    use: number;
+    mount: string;
+  }
+
+  export interface Cpu2 {
+    load: number;
+    loadUser: number;
+    loadSystem: number;
+    loadNice: number;
+    loadIdle: number;
+    loadIrq: number;
+    rawLoad: number;
+    rawLoadUser: number;
+    rawLoadSystem: number;
+    rawLoadNice: number;
+    rawLoadIdle: number;
+    rawLoadIrq: number;
+  }
+
+  export interface Load {
+    avgLoad: number;
+    currentLoad: number;
+    currentLoadUser: number;
+    currentLoadSystem: number;
+    currentLoadNice: number;
+    currentLoadIdle: number;
+    currentLoadIrq: number;
+    rawCurrentLoad: number;
+    rawCurrentLoadUser: number;
+    rawCurrentLoadSystem: number;
+    rawCurrentLoadNice: number;
+    rawCurrentLoadIdle: number;
+    rawCurrentLoadIrq: number;
+    cpus: Cpu2[];
+  }
+
+  export interface SystemStats {
+    cpu: SystemStatsModule.Cpu;
+    mem: SystemStatsModule.Memory;
+    os: SystemStatsModule.OperatingSystem;
+    fs: SystemStatsModule.FileSystem[];
+    load: SystemStatsModule.Load;
+  }
+}
+
+
