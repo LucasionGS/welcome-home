@@ -90,28 +90,54 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
           }}>CPU</Text>
           <Group position="center">
-            {systemStats.load.cpus.map((cpu, i) => (
+            {systemStats.cpu.cores.length > 0 ? systemStats.cpu.cores.map((temp, i) => (
               <RingProgress
                 size={150}
                 thickness={18}
                 roundCaps
                 label={
                   <Text size="lg" align="center">
-                    {cpu.load.toFixed(1)}%
+                    {temp.toFixed(1)}%
                     <br />
                     {systemStats.cpu.cores[i].toFixed(0)}c°
                   </Text>
                 }
                 sections={[{
-                  value: cpu.load,
+                  value: temp,
                   color:
-                    cpu.load > 70 ? "red"
-                      : cpu.load > 50 ? "orange"
+                    temp > 70 ? "red"
+                      : temp > 50 ? "orange"
                         : "green",
                 }]}
               />
-            ))
-            }
+            )) : <Text>No data</Text>}
+          </Group>
+        </div>
+
+        <div>
+          <Text weight={500} style={{
+            fontSize: "32px",
+          }}>CPU (Threads)</Text>
+          <Group position="center">
+            {systemStats.load.cpus.length > 0 ? systemStats.load.cpus.map((thread, i) => (
+              <RingProgress
+                size={150}
+                thickness={18}
+                roundCaps
+                label={
+                  <Text size="lg" align="center">
+                    {thread.load ? `${thread.load.toFixed(1)}%`: "NaN%"}
+                  </Text>
+                }
+                sections={[{
+                  value: thread.load,
+                  color:
+                    thread.load > 70 ? "red"
+                      : thread.load > 50 ? "orange"
+                        : "green",
+                }]}
+              />
+            )) : <Text>No data</Text>}
           </Group>
         </div>
 
@@ -170,8 +196,8 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
                     sections={[{
                       value: diskPercent,
                       color:
-                        diskPercent > 70 ? "red"
-                          : diskPercent > 50 ? "orange"
+                        diskPercent > 90 ? "red"
+                          : diskPercent > 70 ? "orange"
                             : "green",
                     }]}
                   />
