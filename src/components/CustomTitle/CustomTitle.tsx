@@ -1,4 +1,4 @@
-import { Button, Group, Modal, Text, TextInput } from "@mantine/core";
+import { Button, Group, Modal, TextInput } from "@mantine/core";
 import React, { Component } from "react";
 import Api from "../../api/Api";
 import "./CustomTitle.scss";

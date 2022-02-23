@@ -1,6 +1,7 @@
-import { Container, Group, RingProgress, SimpleGrid, Text } from "@mantine/core";
+import { Container, Group, RingProgress, Text } from "@mantine/core";
 import React, { Component } from "react";
 import Api, { type SystemStatsModule } from "../../../api/Api";
+import { autoScaleByte } from "../../../helper";
 import "./ServerStatusView.scss";
 
 interface ServerStatusViewProps { }
@@ -59,25 +60,6 @@ export default class ServerStatusView extends Component<ServerStatusViewProps, S
 function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
   const { systemStats } = props;
   console.log(systemStats.load.cpus);
-
-  function autoScaleByte(bytes: number) {
-    if (bytes < 1024) {
-      return `${bytes} B`;
-    }
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(2)} KB`;
-    }
-    if (bytes < 1024 * 1024 * 1024) {
-      return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-    }
-    if (bytes < 1024 * 1024 * 1024 * 1024) {
-      return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
-    }
-    if (bytes < 1024 * 1024 * 1024 * 1024 * 1024) {
-      return `${(bytes / 1024 / 1024 / 1024 / 1024).toFixed(2)} TB`;
-    }
-    return `${(bytes / 1024 / 1024 / 1024 / 1024 / 1024).toFixed(2)} PB`;
-  }
 
   // Prepared values
   const memoryPercent = (systemStats.mem.active / systemStats.mem.total) * 100;

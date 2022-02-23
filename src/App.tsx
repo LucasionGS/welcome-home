@@ -7,6 +7,7 @@ import { Footer } from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
 import WebcardsView from "./components/View/WebcardsView/WebcardsView";
 import ServerStatusView from "./components/View/ServerStatusView/ServerStatusView";
+import FileExplorerView from "./components/View/FileExplorerView/FileExplorerView";
 
 const editMode = isEditMode();
 let isMemoryMode: boolean;
@@ -41,6 +42,11 @@ function App() {
       title: "Status",
       url: "status",
       view: <ServerStatusView />
+    },
+    {
+      title: "File explorer",
+      url: "file-explorer",
+      view: <FileExplorerView />
     }
   ];
 

@@ -68,9 +68,7 @@ function WebcardsView() {
       {
         webCards ?
           (
-            <Group position="center" direction={view === ViewMode.Simple ? "row" : "column"} style={{
-              // width: view === ViewMode.Categorized ? undefined : "100%"
-            }}>
+            <Group position="center" direction={view === ViewMode.Simple ? "row" : "column"}>
               {categorized.map(c => (
                 <Group key={c.category} direction="column" grow>
                   <Text style={{ fontSize: 32, color: "white", textAlign: "center" }}>{c.category}</Text>

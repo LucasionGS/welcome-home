@@ -1,13 +1,14 @@
 import { isDev } from "../helper";
 import { WebCard, WebCardCreateModel, WebCardModel } from "../models/WebCard";
-import { Image, ImageModel } from "../models/Image";
+import { ImageModel } from "../models/Image";
+import { DirectoryEntryData } from "../components/FileExplorer/DirectoryEntry";
 
 namespace Api {
 
   // Dev mode should use local server
   // Production mode should use current protocol, domain, port, with /api
   export const baseUrl = isDev() ? "http://192.168.0.31:3000"
-  // export const baseUrl = isDev() ? "http://localhost:4321"
+    // export const baseUrl = isDev() ? "http://localhost:4321"
     : `${window.location.protocol}//${window.location.host}`;
   export const baseUrlApi = `${baseUrl}/api`;
   export const baseUrlUploads = `${baseUrl}/uploads`;
@@ -17,9 +18,9 @@ namespace Api {
    * @param response Response object
    * @returns 
    */
-  async function handleResponse<T = any>(response: Response): Promise<T> {
+  async function handleResponse<T = any>(response: Response, handleOk?: (response: Response) => Promise<T>): Promise<T> {
     if (response.ok) {
-      return response.json() as Promise<T>;
+      return handleOk ? handleOk(response) : response.json() as Promise<T>;
     }
     else if (response.status === 401) {
       throw new Error("Unauthorized");
@@ -43,15 +44,15 @@ namespace Api {
   //
 
   export async function _post<T = any>(url: string, body?: any): Promise<T> {
+    const isFormData = body instanceof FormData;
     const bearer = localStorage.getItem("token");
     const res = await fetch(baseUrlApi + url, {
       headers: {
-        "Content-Type": "application/json",
         "Accept": "application/json",
         "Authorization": bearer ? `Bearer ${bearer}` : null
       },
       method: "POST",
-      body: body ? JSON.stringify(body) : null
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : null
     });
 
     return handleResponse<T>(res);
@@ -129,6 +130,106 @@ namespace Api {
     return null;
   }
 
+  // export async function _getBlob(url: string, params: { [key: string]: string | number } = {}): Promise<Blob> {
+  //   const bearer = localStorage.getItem("token");
+  //   const param = new URLSearchParams();
+  //   for (const key in params) {
+  //     if (params.hasOwnProperty(key)) {
+  //       param.append(key, String(params[key]));
+  //     }
+  //   }
+  //   const res = await fetch(baseUrlApi + url + "?" + param.toString(), {
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       "Accept": "application/json",
+  //       "Authorization": bearer ? `Bearer ${bearer}` : null
+  //     },
+  //     method: "GET",
+  //   });
+
+  //   return handleResponse(res, (response) => {
+  //     return response.blob();
+  //   });
+  // }
+
+  export async function getBlob(fileUrl: string, onProgress?: (data: {
+    loaded: number,
+    total: number
+  }) => void): Promise<Blob> {
+    const bearer = localStorage.getItem("token");
+    const res = await fetch(`${baseUrlApi}/server/file?path=` + fileUrl, {
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": bearer ? `Bearer ${bearer}` : null
+      },
+      method: "GET",
+    })
+      .then(response => {
+        // large snippet from https://github.com/AnthumChris/fetch-progress-indicators/blob/master/fetch-basic/supported-browser.js
+        if (!response.ok) {
+          throw Error(response.status + " " + response.statusText)
+        }
+
+        if (!response.body) {
+          throw Error("ReadableStream not yet supported in this browser.")
+        }
+
+        // to access headers, server must send CORS header "Access-Control-Expose-Headers: content-encoding, content-length x-file-size"
+        // server must send custom x-file-size header if gzip or other content-encoding is used
+        const contentEncoding = response.headers.get("content-encoding");
+        const contentLength = response.headers.get(contentEncoding ? "x-file-size" : "content-length");
+        if (contentLength === null) {
+          throw Error("Response size header unavailable");
+        }
+
+        const total = parseInt(contentLength, 10);
+        let loaded = 0;
+
+        return new Response(
+          new ReadableStream({
+            start(controller) {
+              const reader = response.body.getReader();
+
+              read();
+              function read() {
+                reader.read().then(({ done, value }) => {
+                  if (done) {
+                    controller.close();
+                    return;
+                  }
+                  loaded += value.byteLength;
+                  onProgress({ loaded, total });
+                  controller.enqueue(value);
+                  read();
+                }).catch(error => {
+                  console.error(error);
+                  controller.error(error)
+                })
+              }
+            }
+          })
+        );
+      })
+      .then(response => response.blob())
+
+    // return handleResponse(res, (response) => {
+    //   return response.blob();
+    // });
+    return res;
+  }
+
+  export function downloadBlob(blob: Blob, filename: string) {
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style.display = "none";
+    const url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+  }
 
   //
   // Api endpoints
@@ -204,7 +305,7 @@ namespace Api {
   export async function getConfig<T extends keyof SqlDialects = keyof SqlDialects>() {
     return await _get<SqlDialects[T]>("/config");
   }
-  
+
   export async function login(username: string, password: string) {
     return await _post<string>("/user/login", { username, password });
   }
@@ -214,10 +315,28 @@ namespace Api {
       uptime: number;
     }>("/server/uptime");
   }
-  
+
   export async function getSystemStats() {
     const res = await _get<SystemStatsModule.SystemStats>("/server/system-stats");
     return res;
+  }
+
+  export async function getDirectory(path: string) {
+    return _get<DirectoryEntryData[]>("/server/directory", { path });
+  }
+
+  export async function getFile(path: string) {
+    return getBlob(path);
+  }
+
+  export async function uploadFile(path: string, file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("path", path);
+    return _post<{
+      success: boolean,
+      err?: string,
+    }>("/server/file", formData);
   }
 
   // Docker specific endpoints
