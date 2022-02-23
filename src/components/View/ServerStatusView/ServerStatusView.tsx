@@ -1,7 +1,8 @@
-import { Container, Group, RingProgress, Text } from "@mantine/core";
+import { Anchor, Container, Group, RingProgress, Text } from "@mantine/core";
 import React, { Component } from "react";
 import Api, { type SystemStatsModule } from "../../../api/Api";
 import { autoScaleByte } from "../../../helper";
+import ProcessesList from "../../ProcessesList/ProcessesList";
 import "./ServerStatusView.scss";
 
 interface ServerStatusViewProps { }
@@ -19,8 +20,6 @@ export default class ServerStatusView extends Component<ServerStatusViewProps, S
 
   callback = () => {
     Api.getSystemStats().then(stats => {
-      console.log(stats);
-
       this.setState({ systemStats: stats });
     });
   };
@@ -59,17 +58,22 @@ export default class ServerStatusView extends Component<ServerStatusViewProps, S
 
 function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
   const { systemStats } = props;
-  console.log(systemStats.load.cpus);
 
   // Prepared values
   const memoryPercent = (systemStats.mem.active / systemStats.mem.total) * 100;
+  const disks = systemStats.fs
+    // Sort alphabetically
+    .sort((a, b) => a.mount.localeCompare(b.mount))
+    // Sort by length
+    .sort((a, b) => a.mount.length - b.mount.length);
 
   return (
     <div className="stats">
-      <Group direction="column">
+      <Group direction="column" grow>
         <div>
           <Text weight={500} style={{
             fontSize: "32px",
+            textAlign: "center"
           }}>CPU</Text>
           <Group position="center">
             {systemStats.cpu.cores.length > 0 ? systemStats.cpu.cores.map((temp, i) => (
@@ -99,6 +103,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
         <div>
           <Text weight={500} style={{
             fontSize: "32px",
+            textAlign: "center"
           }}>CPU (Threads)</Text>
           <Group position="center">
             {systemStats.load.cpus.length > 0 ? systemStats.load.cpus.map((thread, i) => (
@@ -108,7 +113,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
                 roundCaps
                 label={
                   <Text size="lg" align="center">
-                    {thread.load ? `${thread.load.toFixed(1)}%`: "NaN%"}
+                    {thread.load ? `${thread.load.toFixed(1)}%` : "NaN%"}
                   </Text>
                 }
                 sections={[{
@@ -126,6 +131,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
         <div>
           <Text weight={500} style={{
             fontSize: "32px",
+            textAlign: "center"
           }}>RAM</Text>
           <Group position="center">
             <RingProgress
@@ -153,14 +159,20 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
         <div>
           <Text weight={500} style={{
             fontSize: "32px",
+            textAlign: "center"
           }}>DISK</Text>
           <Group position="center">
-            {systemStats.fs.map((disk, i) => {
+            {disks.map((disk, i) => {
               const diskPercent = (disk.used / disk.size) * 100;
               return (
                 <Group direction="column" grow>
                   <Text size="lg" align="center">
-                    {disk.mount}
+                    <Anchor onClick={() => {
+                      localStorage.setItem("FileExplorer.Directory", disk.mount);
+                      window.location.pathname = "/file-explorer";
+                    }}>
+                      {disk.mount}
+                    </Anchor>
                   </Text>
                   <RingProgress
                     size={210}
@@ -186,6 +198,16 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
                 </Group>
               )
             })}
+          </Group>
+        </div>
+
+        <div>
+          <Text weight={500} style={{
+            fontSize: "32px",
+            textAlign: "center"
+          }}>PROCESSES</Text>
+          <Group position="center">
+            <ProcessesList maxDisplay={30} processes={systemStats.processes.list} />
           </Group>
         </div>
       </Group>

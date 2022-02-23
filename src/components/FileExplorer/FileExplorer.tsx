@@ -1,4 +1,5 @@
-import { Button, Checkbox, Container, Grid, Group, Loader, Menu, Progress, Text, TextInput } from "@mantine/core";
+import { Button, Checkbox, Container, Grid, Group, Loader, Menu, Modal, Progress, Text, TextInput } from "@mantine/core";
+import { Prism } from "@mantine/prism";
 import React, { useState } from "react";
 import DirectoryEntry from "./DirectoryEntry";
 import fontAwesome from "@fortawesome/fontawesome";
@@ -15,6 +16,7 @@ import { autoScaleByte } from "../../helper";
 import Api from "../../api/Api";
 import { Dropzone } from '@mantine/dropzone';
 import { useForceUpdate } from "@mantine/hooks";
+import { PrismSharedProps } from "@mantine/prism/lib/types";
 
 (fontAwesome.library.add as any)(faFolder, faFile, faEllipsisV, faDownload, faX);
 
@@ -22,6 +24,77 @@ interface FileExplorerProps {
   directory?: string;
   storageId?: string;
   disableStorage?: boolean;
+}
+
+const filePreview: {
+  [extension: string]: [
+    "image",
+    "text",
+
+    // Programming languages
+    "javascript",
+
+    PrismSharedProps["language"],
+  ][number];
+} = {
+  // Images
+  png: "image",
+  jpg: "image",
+  jpeg: "image",
+  gif: "image",
+  svg: "image",
+  ico: "image",
+
+  // Text
+  txt: "text",
+
+  // Programming languages
+  js: "javascript",
+  ts: "javascript",
+  tsx: "jsx",
+  jsx: "jsx",
+
+  c: "c",
+  cpp: "cpp",
+  h: "c",
+  hpp: "cpp",
+  cc: "cpp",
+  cxx: "cpp",
+  hxx: "cpp",
+  cs: "clike",
+
+  
+  // Data files
+  json: "json",
+  yml: "yaml",
+  yaml: "yaml",
+
+  // Sql
+  sql: "sql",
+
+  // Markdown
+  md: "markdown",
+  
+  // CSS
+  css: "css",
+  scss: "scss",
+  less: "less",
+  sass: "sass",
+  styl: "stylus",
+  stylus: "stylus",
+  
+  // Python
+  py: "python",
+
+  // HTML
+  html: "markup",
+  htm: "markup",
+  
+  // Shell
+  sh: "bash",
+  bash: "bash",
+  bat: "bash",
+  
 }
 
 export default function FileExplorer(props: FileExplorerProps) {
@@ -173,7 +246,8 @@ interface FileExplorerItemProps {
 function DirectoryEntryItem(props: FileExplorerItemProps) {
   const [loading, setLoading] = useState(false);
   const [percent, setPercent] = useState<number>(null);
-  const [contextMenuOpened, setContextMenuOpened] = useState(false);
+  const [openedPreview, setOpenedPreview] = useState(false);
+  // const [contextMenuOpened, setContextMenuOpened] = useState(false);
 
   const entry = props.entry;
   const colStyle: React.CSSProperties = {
@@ -200,19 +274,37 @@ function DirectoryEntryItem(props: FileExplorerItemProps) {
         //   setContextMenuOpened(true);
         // }}
         >
+          <FilePreviewModel entry={entry} opened={openedPreview} setOpened={setOpenedPreview} />
           {
             !percent && loading ? (
               <Loader />
             ) : (
               <>
                 <Menu position="left">
+                  {!entry.isDirectory && (entry.getExtension() in filePreview) ? (<Menu.Item icon={<FontAwesomeIcon icon={faDownload} />}
+                    onClick={async () => {
+                      setOpenedPreview(true);
+                    }}
+                  >
+                    <Text size="sm">Preview</Text>
+                  </Menu.Item>) : null}
                   {!entry.isDirectory ? (
-                    <Menu.Item icon={<FontAwesomeIcon icon={faDownload} />}>
+                    <Menu.Item icon={<FontAwesomeIcon icon={faDownload} />}
+                      onClick={async () => {
+                        setLoading(true);
+                        const file = await Api.getBlob(entry.getFullPath(), ({ loaded, total }) => {
+                          setPercent(loaded / total * 100);
+                        });
+                        Api.downloadBlob(file, entry.name);
+                        setPercent(null);
+                        setLoading(false);
+                      }}
+                    >
                       <Text size="sm">Download</Text>
                     </Menu.Item>
                   ) : null}
-                  <Menu.Item icon={<FontAwesomeIcon icon={faX} />} color="red"
-                    onClick={ async () => {
+                  <Menu.Item icon={<FontAwesomeIcon icon={faX} />} color="red" disabled
+                    onClick={async () => {
                       // TODO : Ask for confirmation and delete the file
                     }}
                   >
@@ -227,6 +319,12 @@ function DirectoryEntryItem(props: FileExplorerItemProps) {
                   className="directoryEntryItemName"
                   // onDoubleClick={() => {
                   onClick={async () => {
+
+                    // Preview if the file is previewable
+                    if (entry.getExtension() in filePreview) {
+                      return setOpenedPreview(true);
+                    }
+                    
                     setLoading(true);
                     if (entry.isDirectory) {
                       await props.openEntry(entry)
@@ -266,6 +364,78 @@ function DirectoryEntryItem(props: FileExplorerItemProps) {
           })()}</Text>
         </Grid.Col>
       </Grid>
-    </div>
+    </div >
   )
+}
+
+function FilePreviewModel(props: {
+  entry: DirectoryEntry,
+  opened: boolean,
+  setOpened: (value: React.SetStateAction<boolean>) => void
+}) {
+  const [content, setContent] = useState<React.ReactNode>(undefined);
+  if (props.opened && content === undefined) {
+    const entry = props.entry;
+    const ext = entry.name.split(".").pop() || null;
+    if (ext && ext in filePreview) {
+      const type = filePreview[ext];
+
+      if (type === "image") {
+        setContent(
+          <img src={Api.baseUrlApi + `/server/preview-file?path=${encodeURIComponent(entry.getFullPath())}`} />
+        );
+      }
+      else if (type === "text") {
+
+      }
+      else {
+        Api._get(`/server/preview-file`, {
+          path: entry.getFullPath()
+        }, res => res.text()).then(data => {
+          setContent(
+            <Prism
+              language={type}
+              style={{
+                maxHeight: "calc(100vh - 300px)",
+                overflowY: "auto",
+              }}
+            >
+              {data}
+            </Prism>
+          );
+        }).catch((err) => {
+          console.error(err);
+
+          setContent(
+            "<Preview not available>"
+          );
+        })
+      }
+    }
+    else {
+      setContent(
+        "Preview not available for this file type"
+      );
+    }
+  }
+
+  return (
+    <Modal opened={props.opened} onClose={() => props.setOpened(false)}
+      size={1000}
+    >
+      <Container style={{
+        padding: 8,
+        borderBottom: "1px solid #ccc",
+      }}>
+        <Text>Preview</Text>
+      </Container>
+      <Container
+        style={{
+          padding: 8
+        }}
+      >
+        {content}
+      </Container>
+    </Modal>
+  );
 }

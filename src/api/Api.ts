@@ -18,7 +18,7 @@ namespace Api {
    * @param response Response object
    * @returns 
    */
-  async function handleResponse<T = any>(response: Response, handleOk?: (response: Response) => Promise<T>): Promise<T> {
+  async function handleResponse<T = any>(response: Response, handleOk?: HandleOk<T>): Promise<T> {
     if (response.ok) {
       return handleOk ? handleOk(response) : response.json() as Promise<T>;
     }
@@ -39,6 +39,8 @@ namespace Api {
     }
   }
 
+  type HandleOk<T = any> = (response: Response) => Promise<T>;
+
   //
   // Fetch methods
   //
@@ -48,11 +50,12 @@ namespace Api {
     const bearer = localStorage.getItem("token");
     const res = await fetch(baseUrlApi + url, {
       headers: {
+        "Content-Type": isFormData ? undefined : "application/json",
         "Accept": "application/json",
         "Authorization": bearer ? `Bearer ${bearer}` : null
       },
       method: "POST",
-      body: body instanceof FormData ? body : body ? JSON.stringify(body) : null
+      body: isFormData ? body : (body ? JSON.stringify(body) : null)
     });
 
     return handleResponse<T>(res);
@@ -73,7 +76,7 @@ namespace Api {
     return handleResponse<T>(res);
   }
 
-  export async function _get<T = any>(url: string, params: { [key: string]: string | number } = {}): Promise<T> {
+  export async function _get<T = any>(url: string, params: { [key: string]: string | number } = {}, handleOk?: HandleOk<T>): Promise<T> {
     const bearer = localStorage.getItem("token");
     const param = new URLSearchParams();
     for (const key in params) {
@@ -90,7 +93,7 @@ namespace Api {
       method: "GET",
     });
 
-    return handleResponse<T>(res);
+    return handleOk ? handleOk(res) : handleResponse<T>(res);
   }
 
   export async function _delete<T = any>(url: string, params: { [key: string]: string | number } = {}): Promise<T> {
@@ -443,12 +446,43 @@ export declare module SystemStatsModule {
     cpus: Thread[];
   }
 
+  export interface Process {
+    pid: number;
+    parentPid: number;
+    name: string,
+    cpu: number;
+    cpuu: number;
+    cpus: number;
+    mem: number;
+    priority: number;
+    memVsz: number;
+    memRss: number;
+    nice: number;
+    started: string,
+    state: string;
+    tty: string;
+    user: string;
+    command: string;
+    params: string;
+    path: string;
+  }
+
+  export interface ProcessesData {
+    all: number;
+    running: number;
+    blocked: number;
+    sleeping: number;
+    unknown: number;
+    list: Process[];
+  }
+
   export interface SystemStats {
     cpu: SystemStatsModule.Cpu;
     mem: SystemStatsModule.Memory;
     os: SystemStatsModule.OperatingSystem;
     fs: SystemStatsModule.FileSystem[];
     load: SystemStatsModule.Load;
+    processes: ProcessesData;
   }
 }
 

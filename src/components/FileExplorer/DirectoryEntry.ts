@@ -21,6 +21,10 @@ export default class DirectoryEntry extends Array<DirectoryEntry> {
   public parent: DirectoryEntry = null;
   public locked = true;
 
+  public getExtension(): string {
+    return this.name.split(".").pop() || "";
+  }
+
   public static fromMetadata(metadata: DirectoryEntryData): DirectoryEntry {
     return new DirectoryEntry(
       metadata.name,

@@ -1,0 +1,7 @@
+.sortable {
+  user-select: none;
+  &:hover {
+    cursor: pointer;
+    background-color: #4f4f4f;
+  }
+}
