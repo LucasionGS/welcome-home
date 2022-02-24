@@ -1,5 +1,7 @@
 // import process from "process";
 
+import React from "react";
+
 export function isDev() {
   if (process.env.NODE_ENV === "development") {
     return true;
@@ -43,4 +45,14 @@ export function autoScaleByte(bytes: number) {
     return `${(bytes / 1024 / 1024 / 1024 / 1024).toFixed(2)} TB`;
   }
   return `${(bytes / 1024 / 1024 / 1024 / 1024 / 1024).toFixed(2)} PB`;
+}
+
+// Generate a random color with seed
+export function randomColor(seed: number) {
+  var x = Math.abs(Math.sin(seed + 1) % 1) * 0xFFFFFF;
+  return "#" + Math.floor(x).toString(16);
+}
+
+export function showInEditMode(element: React.ReactNode) {
+  return isEditMode() ? element : null;
 }

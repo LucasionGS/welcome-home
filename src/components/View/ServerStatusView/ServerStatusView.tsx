@@ -1,14 +1,20 @@
-import { Anchor, Container, Group, RingProgress, Text } from "@mantine/core";
+import { Alert, Anchor, Badge, Container, Group, Loader, NumberInput, RingProgress, Select, Text } from "@mantine/core";
 import React, { Component } from "react";
 import Api, { type SystemStatsModule } from "../../../api/Api";
-import { autoScaleByte } from "../../../helper";
+import { autoScaleByte, isEditMode, randomColor, showInEditMode as ShowInEditMode } from "../../../helper";
 import ProcessesList from "../../ProcessesList/ProcessesList";
+import { LineChart, Line, Tooltip, CartesianGrid, XAxis, YAxis } from "recharts";
 import "./ServerStatusView.scss";
+import { useForceUpdate } from "@mantine/hooks";
 
 interface ServerStatusViewProps { }
 interface ServerStatusViewState {
   systemStats: SystemStatsModule.SystemStats;
 }
+
+// const statsHistory: (Omit<SystemStatsModule.SystemStats, "processes"> & {
+//   timestamp: Date;
+// })[] = [];
 
 export default class ServerStatusView extends Component<ServerStatusViewProps, ServerStatusViewState> {
   constructor(props: ServerStatusViewProps) {
@@ -20,13 +26,24 @@ export default class ServerStatusView extends Component<ServerStatusViewProps, S
 
   callback = () => {
     Api.getSystemStats().then(stats => {
+      // const data = {
+      //   ...stats,
+      //   timestamp: new Date()
+      // };
+
+      // delete data.processes;
+      // statsHistory.push(data);
+      // if (statsHistory.length > 12) {
+      //   statsHistory.shift();
+      // }
       this.setState({ systemStats: stats });
     });
   };
 
   intervalId: number;
+  timeBetweenUpdates = 5000;
   componentDidMount() {
-    this.intervalId = window.setInterval(this.callback, 2000);
+    if (!isEditMode()) this.intervalId = window.setInterval(this.callback, this.timeBetweenUpdates);
     this.callback();
   }
 
@@ -47,7 +64,7 @@ export default class ServerStatusView extends Component<ServerStatusViewProps, S
           {
             systemStats ? (
               <DisplayStats systemStats={systemStats} />
-            ) : (<h1>Loading data...</h1>)
+            ) : (<h1>Loading data&nbsp;<Loader /></h1>)
           }
 
         </Container>
@@ -57,9 +74,35 @@ export default class ServerStatusView extends Component<ServerStatusViewProps, S
 }
 
 function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
+  const update = useForceUpdate();
   const { systemStats } = props;
 
+  // Locally stored options sections
+  const options = {
+    cpu: {
+      direction: localStorage.getItem("ServerStatus.cpu.direction") || "center"
+    },
+    cpuThreads: {
+      direction: localStorage.getItem("ServerStatus.cpuThreads.direction") || "center"
+    },
+    ram: {
+      direction: localStorage.getItem("ServerStatus.ram.direction") || "center"
+    },
+    disks: {
+      direction: localStorage.getItem("ServerStatus.disks.direction") || "center"
+    },
+    processes: {
+      maxProcesses: (+localStorage.getItem("ServerStatus.processes.maxProcesses") || 10),
+    }
+  };
+
   // Prepared values
+  const presetPositions = [
+    { label: "Left", value: "left" },
+    { label: "Center", value: "center" },
+    { label: "Right", value: "right" }
+  ];
+
   const memoryPercent = (systemStats.mem.active / systemStats.mem.total) * 100;
   const disks = systemStats.fs
     // Sort alphabetically
@@ -69,13 +112,30 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
 
   return (
     <div className="stats">
+      {
+        isEditMode() && (
+          <Alert variant="filled" color="yellow">
+            <Text>Edit mode enabled.</Text>
+            <Text>Data will not update while in this mode.</Text>
+          </Alert>
+        )
+      }
       <Group direction="column" grow>
         <div>
           <Text weight={500} style={{
             fontSize: "32px",
             textAlign: "center"
           }}>CPU</Text>
-          <Group position="center">
+          {ShowInEditMode(
+            <>
+              <Select label="CPU: Edit Position" data={presetPositions} value={options.cpu.direction} onChange={(value) => {
+                options.cpu.direction = value;
+                localStorage.setItem("ServerStatus.cpu.direction", value);
+                update();
+              }} />
+            </>
+          )}
+          <Group position={options.cpu.direction as any}>
             {systemStats.cpu.cores.length > 0 ? systemStats.cpu.cores.map((temp, i) => (
               <RingProgress
                 size={150}
@@ -83,9 +143,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
                 roundCaps
                 label={
                   <Text size="lg" align="center">
-                    {temp.toFixed(1)}%
-                    <br />
-                    {systemStats.cpu.cores[i].toFixed(0)}c°
+                    {temp.toFixed(1)}c°
                   </Text>
                 }
                 sections={[{
@@ -105,7 +163,16 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>CPU (Threads)</Text>
-          <Group position="center">
+          {ShowInEditMode(
+            <>
+              <Select label="CPU: Edit Position" data={presetPositions} value={options.cpuThreads.direction} onChange={(value) => {
+                options.cpuThreads.direction = value;
+                localStorage.setItem("ServerStatus.cpuThreads.direction", value);
+                update();
+              }} />
+            </>
+          )}
+          <Group position={options.cpuThreads.direction as any}>
             {systemStats.load.cpus.length > 0 ? systemStats.load.cpus.map((thread, i) => (
               <RingProgress
                 size={150}
@@ -113,7 +180,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
                 roundCaps
                 label={
                   <Text size="lg" align="center">
-                    {thread.load ? `${thread.load.toFixed(1)}%` : "NaN%"}
+                    {thread.load ? `${thread.load.toFixed(1)}` : "NaN"}%
                   </Text>
                 }
                 sections={[{
@@ -133,7 +200,16 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>RAM</Text>
-          <Group position="center">
+          {ShowInEditMode(
+            <>
+              <Select label="RAM: Edit Position" data={presetPositions} value={options.ram.direction} onChange={(value) => {
+                options.ram.direction = value;
+                localStorage.setItem("ServerStatus.ram.direction", value);
+                update();
+              }} />
+            </>
+          )}
+          <Group position={options.ram.direction as any}>
             <RingProgress
               size={200}
               thickness={18}
@@ -161,7 +237,16 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>DISK</Text>
-          <Group position="center">
+          {ShowInEditMode(
+            <>
+              <Select label="DISK: Edit Position" data={presetPositions} value={options.disks.direction} onChange={(value) => {
+                options.disks.direction = value;
+                localStorage.setItem("ServerStatus.disks.direction", value);
+                update();
+              }} />
+            </>
+          )}
+          <Group position={options.disks.direction as any}>
             {disks.map((disk, i) => {
               const diskPercent = (disk.used / disk.size) * 100;
               return (
@@ -206,8 +291,17 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>PROCESSES</Text>
+          {ShowInEditMode(
+            <Group>
+              <NumberInput min={1} label="Max Processes" value={options.processes.maxProcesses} onChange={(value) => {
+                options.processes.maxProcesses = value;
+                localStorage.setItem("ServerStatus.processes.maxProcesses", value.toString());
+                update();
+              }} />
+            </Group>
+          )}
           <Group position="center">
-            <ProcessesList maxDisplay={30} processes={systemStats.processes.list} />
+            <ProcessesList maxDisplay={options.processes.maxProcesses} processes={systemStats.processes.list} />
           </Group>
         </div>
       </Group>

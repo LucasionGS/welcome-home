@@ -47,6 +47,7 @@ const filePreview: {
 
   // Text
   txt: "text",
+  log: "text",
 
   // Programming languages
   js: "javascript",
@@ -63,7 +64,7 @@ const filePreview: {
   hxx: "cpp",
   cs: "clike",
 
-  
+
   // Data files
   json: "json",
   yml: "yaml",
@@ -74,7 +75,7 @@ const filePreview: {
 
   // Markdown
   md: "markdown",
-  
+
   // CSS
   css: "css",
   scss: "scss",
@@ -82,19 +83,19 @@ const filePreview: {
   sass: "sass",
   styl: "stylus",
   stylus: "stylus",
-  
+
   // Python
   py: "python",
 
   // HTML
   html: "markup",
   htm: "markup",
-  
+
   // Shell
   sh: "bash",
   bash: "bash",
   bat: "bash",
-  
+
 }
 
 export default function FileExplorer(props: FileExplorerProps) {
@@ -324,7 +325,7 @@ function DirectoryEntryItem(props: FileExplorerItemProps) {
                     if (entry.getExtension() in filePreview) {
                       return setOpenedPreview(true);
                     }
-                    
+
                     setLoading(true);
                     if (entry.isDirectory) {
                       await props.openEntry(entry)
@@ -382,7 +383,16 @@ function FilePreviewModel(props: {
 
       if (type === "image") {
         setContent(
-          <img src={Api.baseUrlApi + `/server/preview-file?path=${encodeURIComponent(entry.getFullPath())}`} />
+          <Group position="center">
+            <img
+            src={Api.baseUrlApi + `/server/preview-file?path=${encodeURIComponent(entry.getFullPath())}`}
+            style={{
+              display: "block",
+              maxWidth: "100%",
+              maxHeight: "75vh",
+            }}
+          />
+          </Group>
         );
       }
       else if (type === "text") {
@@ -424,7 +434,7 @@ function FilePreviewModel(props: {
       size={1000}
     >
       <Container style={{
-        padding: 8,
+        // padding: 8,
         borderBottom: "1px solid #ccc",
       }}>
         <Text>Preview</Text>
