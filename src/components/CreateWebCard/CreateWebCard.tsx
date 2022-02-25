@@ -109,7 +109,6 @@ export default function CreateWebCard(props: CreateWebCardProps) {
                         // Get only the path from the URL
                         const url = new URL(data.url);
                         setImageUrl(url.pathname);
-                        // setImageUrl(data.url);
                       });
                     });
                   })}
@@ -117,11 +116,6 @@ export default function CreateWebCard(props: CreateWebCardProps) {
                   maxSize={Infinity}
                 >
                   {(status) => (
-                    // <Group position="center" spacing="xl" style={{ width: 32, height: 32, pointerEvents: 'none' }}>
-                    //   <Text size="xl" inline>
-                    //     Select
-                    //   </Text>
-                    // </Group>
                     <Image src={imageUrl?.startsWith("/") ? (Api.baseUrl + imageUrl) : imageUrl} height={64} width={64} />
                   )}
                 </Dropzone>

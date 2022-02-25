@@ -80,7 +80,9 @@ function WebcardsView() {
       {
         webCards ?
           (
-            <Group position="center" direction={view === ViewMode.Simple ? "row" : "column"}>
+            <Group position="center" direction={view === ViewMode.Simple ? "row" : "column"} style={{
+              alignItems: "start", // Pushes the cards to the top
+            }}>
               {categorized.map(c => (
                 <Group key={c.category} direction="column" grow>
                   <Text style={{ fontSize: 32, color: "white", textAlign: "center" }}>{c.category}</Text>
