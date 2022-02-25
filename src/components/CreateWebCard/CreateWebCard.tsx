@@ -1,4 +1,5 @@
-import { Button, Checkbox, Chip, Chips, Group, Modal, Text, Textarea, TextInput } from "@mantine/core";
+import { Button, Checkbox, Chip, Chips, Group, Image, Modal, Text, Textarea, TextInput } from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
 import RichTextEditor from "@mantine/rte";
 import React, { useRef } from "react";
 import Api from "../../api/Api";
@@ -21,6 +22,8 @@ interface CreateWebCardProps {
 
   fullWidth?: boolean;
 
+  component?: (openModal: () => void) => JSX.Element;
+
   /**
    * Executes when a new WebCard is created or an existing WebCard is updated.
    */
@@ -36,9 +39,13 @@ export default function CreateWebCard(props: CreateWebCardProps) {
   }
   const [opened, setOpened] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
+
   const [descriptionText, setDescriptionText] = React.useState(getValue("description"));
+  const [imageUrl, setImageUrl] = React.useState(getValue("image"));
 
   const form = useRef<HTMLFormElement>();
+
+  const openModal = () => setOpened(true);
 
   return (
     <div>
@@ -70,7 +77,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
             if (typeof props.onCreate === "function") props.onCreate(props.updateWebCard);
           }
           else {
-            await Api.createWebCard({
+            const webCard = await Api.createWebCard({
               title: formData.get("title") as string,
               description: formData.get("description") as string,
               url: formData.get("url") as string,
@@ -79,7 +86,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
               checkAvailable: formData.has("checkAvailable"),
               category: formData.get("category") as string,
             });
-            if (typeof props.onCreate === "function") props.onCreate(props.updateWebCard);
+            if (typeof props.onCreate === "function") props.onCreate(webCard);
           }
 
           setLoading(false);
@@ -90,7 +97,37 @@ export default function CreateWebCard(props: CreateWebCardProps) {
             <TextInput required name="title" label="Title" defaultValue={getValue("title")} />
             <Textarea readOnly style={{ display: "none" }} name="description" label="Description" value={descriptionText} />
             <TextInput required type="url" name="url" label="Url" defaultValue={getValue("url")} />
-            <TextInput name="image" label="Icon URL" defaultValue={getValue("image")} />
+
+            <Group grow>
+              <TextInput name="image" label="Icon URL" value={imageUrl} onChange={(v) => setImageUrl(v.currentTarget.value)} />
+
+              <Group position="right">
+                <Dropzone
+                  onDrop={(async files => {
+                    files.forEach(file => {
+                      Api.uploadImage(file).then(data => {
+                        // Get only the path from the URL
+                        const url = new URL(data.url);
+                        setImageUrl(url.pathname);
+                        // setImageUrl(data.url);
+                      });
+                    });
+                  })}
+                  multiple={false}
+                  maxSize={Infinity}
+                >
+                  {(status) => (
+                    // <Group position="center" spacing="xl" style={{ width: 32, height: 32, pointerEvents: 'none' }}>
+                    //   <Text size="xl" inline>
+                    //     Select
+                    //   </Text>
+                    // </Group>
+                    <Image src={imageUrl.startsWith("/") ? (Api.baseUrl + imageUrl) : imageUrl} height={64} width={64} />
+                  )}
+                </Dropzone>
+              </Group>
+            </Group>
+
             <TextInput name="category" label="Category" defaultValue={getValue("category")} />
             <Chips name="target" defaultValue={getValue("target", "_self")}>
               <Chip value="_self">Same Tab</Chip>
@@ -174,9 +211,17 @@ export default function CreateWebCard(props: CreateWebCardProps) {
         </form>
       </Modal>
 
-      <Button fullWidth={props.fullWidth} className="create-web-card-button" onClick={() => setOpened(true)}>{props.buttonText ? props.buttonText : "Create Web Card"}</Button>
-      {/* <Group position="center">
-      </Group> */}
+      {
+        props.component ?
+          props.component(openModal) :
+          (
+            <Button
+              fullWidth={props.fullWidth}
+              className="create-web-card-button"
+              onClick={openModal}>{props.buttonText ? props.buttonText : "Create Web Card"}
+            </Button>
+          )
+      }
     </div>
   )
 }

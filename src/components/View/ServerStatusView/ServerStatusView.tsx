@@ -1,7 +1,7 @@
 import { Alert, Anchor, Badge, Container, Group, Loader, NumberInput, RingProgress, Select, Text } from "@mantine/core";
 import React, { Component } from "react";
 import Api, { type SystemStatsModule } from "../../../api/Api";
-import { autoScaleByte, isEditMode, randomColor, showInEditMode as ShowInEditMode } from "../../../helper";
+import { autoScaleByte, isEditMode, randomColor, showInEditMode } from "../../../helper";
 import ProcessesList from "../../ProcessesList/ProcessesList";
 import { LineChart, Line, Tooltip, CartesianGrid, XAxis, YAxis } from "recharts";
 import "./ServerStatusView.scss";
@@ -113,7 +113,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
   return (
     <div className="stats">
       {
-        isEditMode() && (
+        showInEditMode(
           <Alert variant="filled" color="yellow">
             <Text>Edit mode enabled.</Text>
             <Text>Data will not update while in this mode.</Text>
@@ -126,7 +126,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>CPU</Text>
-          {ShowInEditMode(
+          {showInEditMode(
             <>
               <Select label="CPU: Edit Position" data={presetPositions} value={options.cpu.direction} onChange={(value) => {
                 options.cpu.direction = value;
@@ -163,7 +163,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>CPU (Threads)</Text>
-          {ShowInEditMode(
+          {showInEditMode(
             <>
               <Select label="CPU: Edit Position" data={presetPositions} value={options.cpuThreads.direction} onChange={(value) => {
                 options.cpuThreads.direction = value;
@@ -200,7 +200,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>RAM</Text>
-          {ShowInEditMode(
+          {showInEditMode(
             <>
               <Select label="RAM: Edit Position" data={presetPositions} value={options.ram.direction} onChange={(value) => {
                 options.ram.direction = value;
@@ -237,7 +237,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>DISK</Text>
-          {ShowInEditMode(
+          {showInEditMode(
             <>
               <Select label="DISK: Edit Position" data={presetPositions} value={options.disks.direction} onChange={(value) => {
                 options.disks.direction = value;
@@ -291,7 +291,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             fontSize: "32px",
             textAlign: "center"
           }}>PROCESSES</Text>
-          {ShowInEditMode(
+          {showInEditMode(
             <Group>
               <NumberInput min={1} label="Max Processes" value={options.processes.maxProcesses} onChange={(value) => {
                 options.processes.maxProcesses = value;

@@ -90,6 +90,7 @@ const filePreview: {
   // HTML
   html: "markup",
   htm: "markup",
+  php: "clike",
 
   // Shell
   sh: "bash",

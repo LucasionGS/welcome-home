@@ -238,6 +238,23 @@ namespace Api {
   // Api endpoints
   //
 
+  export async function setFavicon(image: File) {
+    const data = new FormData();
+    data.append("image", image);
+    const response = await fetch(baseUrl + "/favicon.ico", {
+      method: "POST",
+      body: data,
+    });
+    const img = await handleResponse<ImageModel>(response);
+    if (img) {
+      return {
+        url: Api.baseUrlUploads + "/" + img.path,
+        image: img,
+      };
+    }
+    return null;
+  }
+
   interface SiteOption {
     key: string;
     value: string;

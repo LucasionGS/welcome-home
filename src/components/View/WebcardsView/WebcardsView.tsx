@@ -1,12 +1,13 @@
 import React from "react";
 import CreateWebCard from "../../../components/CreateWebCard/CreateWebCard";
-import { Group, Loader, Select, Text } from "@mantine/core";
+import { Alert, Group, Loader, Select, Text } from "@mantine/core";
 import { WebCard as WebCardItem, WebCardCategory } from "../../../models/WebCard";
 import WebCard, { ViewMode } from "../../../components/WebCard/WebCard";
 import Api from "../../../api/Api";
 import fontAwesome from "@fortawesome/fontawesome";
 import { faCheck, faPen } from "@fortawesome/free-solid-svg-icons";
 import { editMode } from "../../Header/Header";
+import { showInEditMode } from "../../../helper";
 
 fontAwesome.library.add(faCheck as any, faPen as any);
 
@@ -44,25 +45,36 @@ function WebcardsView() {
 
   return (
     <>
+      {
+        showInEditMode(
+          <Alert variant="filled" color="yellow">
+            <Text>Edit mode enabled. Click a webcard to edit.</Text>
+          </Alert>
+        )
+      }
       <div style={{
         width: `fit-content`,
         margin: "8px 32px"
       }}
       >
-        <Text style={{ color: "white", textAlign: "center" }}>View mode</Text>
-        <Select
-          data={
-            viewValues.map(([key, value]) => ({ value: value.toString() as string, label: key }))
-          }
-          value={view.toString()}
-          onChange={(value) => {
-            window.localStorage.setItem("view", value);
-            setView(+value);
-          }}
-        />
-        {
-          editMode && <CreateWebCard />
-        }
+        <Group>
+          {showInEditMode(
+            <CreateWebCard onCreate={wc => setWebCards([...webCards, wc])} />
+          )}
+        </Group>
+        <div>
+          <Select
+            label="View mode"
+            data={
+              viewValues.map(([key, value]) => ({ value: value.toString() as string, label: key }))
+            }
+            value={view.toString()}
+            onChange={(value) => {
+              window.localStorage.setItem("view", value);
+              setView(+value);
+            }}
+          />
+        </div>
       </div>
       <br />
       {

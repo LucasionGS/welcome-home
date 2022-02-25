@@ -1,6 +1,11 @@
 .web-card, .web-card * {
-  transition: all 0.3s ease-in-out;
+  transition: all 0.2s ease-in-out;
   .web-card-description img {
     max-width: 100%;
   }
+}
+
+.web-card:hover {
+  cursor: pointer;
+  filter: brightness(1.3);
 }

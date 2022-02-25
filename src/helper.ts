@@ -53,6 +53,9 @@ export function randomColor(seed: number) {
   return "#" + Math.floor(x).toString(16);
 }
 
-export function showInEditMode(element: React.ReactNode) {
-  return isEditMode() ? element : null;
+/**
+ * Only show the element if the `editMode` is true
+ */
+export function showInEditMode(element: React.ReactNode, elementOnFalse?: React.ReactNode) {
+  return isEditMode() ? element : (elementOnFalse || null);
 }
