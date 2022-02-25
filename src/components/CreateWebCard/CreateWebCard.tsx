@@ -122,7 +122,7 @@ export default function CreateWebCard(props: CreateWebCardProps) {
                     //     Select
                     //   </Text>
                     // </Group>
-                    <Image src={imageUrl.startsWith("/") ? (Api.baseUrl + imageUrl) : imageUrl} height={64} width={64} />
+                    <Image src={imageUrl?.startsWith("/") ? (Api.baseUrl + imageUrl) : imageUrl} height={64} width={64} />
                   )}
                 </Dropzone>
               </Group>
