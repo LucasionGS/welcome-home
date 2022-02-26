@@ -128,7 +128,6 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
 
   getImageUrl() {
     const url = this.state.webCard?.image;
-    console.log(url, this.state.webCard.title);
     if (url?.startsWith("/uploads")) {
       return `${Api.baseUrl}${url}`;
     }

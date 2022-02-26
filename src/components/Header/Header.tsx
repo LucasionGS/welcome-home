@@ -19,7 +19,6 @@ export default function Header(props: HeaderProps) {
   if (showMemoryMode === undefined) {
     setShowMemoryMode(null);
     Api.getConfig<"sqlite">().then(config => {
-      console.log(config);
       setShowMemoryMode(config?.__defaultConfig === true);
     });
   }

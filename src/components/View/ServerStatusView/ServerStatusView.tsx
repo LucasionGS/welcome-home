@@ -138,6 +138,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
           <Group position={options.cpu.direction as any}>
             {systemStats.cpu.cores.length > 0 ? systemStats.cpu.cores.map((temp, i) => (
               <RingProgress
+                key={i}
                 size={150}
                 thickness={18}
                 roundCaps
@@ -175,6 +176,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
           <Group position={options.cpuThreads.direction as any}>
             {systemStats.load.cpus.length > 0 ? systemStats.load.cpus.map((thread, i) => (
               <RingProgress
+                key={i}
                 size={150}
                 thickness={18}
                 roundCaps
@@ -250,7 +252,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             {disks.map((disk, i) => {
               const diskPercent = (disk.used / disk.size) * 100;
               return (
-                <Group direction="column" grow>
+                <Group key={i} direction="column" grow>
                   <Text size="lg" align="center">
                     <Anchor onClick={() => {
                       localStorage.setItem("FileExplorer.Directory", disk.mount);
