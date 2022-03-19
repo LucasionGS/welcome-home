@@ -303,7 +303,7 @@ function DisplayStats(props: { systemStats: SystemStatsModule.SystemStats }) {
             </Group>
           )}
           <Group position="center">
-            <ProcessesList maxDisplay={options.processes.maxProcesses} processes={systemStats.processes.list} />
+            <ProcessesList maxDisplay={options.processes.maxProcesses} processes={systemStats.processes?.list ?? []} />
           </Group>
         </div>
       </Group>
