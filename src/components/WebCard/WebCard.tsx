@@ -143,9 +143,9 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
 
     switch (this.props.viewMode) {
       case ViewMode.Simple:
-        return this.viewSimple(webCard);
+        return this.viewSimple(webCard) as JSX.Element;
       default:
-        return this.viewBlock(webCard);
+        return this.viewBlock(webCard) as JSX.Element;
     }
   }
 
