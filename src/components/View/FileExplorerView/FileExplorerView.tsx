@@ -127,7 +127,7 @@ export default function FileExplorerView(props: FileExplorerViewProps) {
   const path = localStorage.getItem("FileExplorer.Directory") || "/";
   return (
     <div className="fileExplorerView">
-      <FileExplorer api={api} initialPath={window.location.pathname} />
+      <FileExplorer api={api} initialPath={path} />
       {/* <FileExplorer directory="/" /> */}
     </div>
   )

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import "./App.scss";
 import { MantineProvider, Tab, Tabs } from "@mantine/core";
 import Api from "./api/Api";
@@ -78,12 +78,22 @@ function App() {
   //   setCustomTabs(_customTabs);
   // }
 
-  const initialIndex = (() => {
+  const initialIndex = useMemo(() => {
     const cat = window.location.pathname.split("/")[1];
     const index = tabs.findIndex(t => t.url === cat);
     return index === -1 ? 0 : index;
-  })();
+  }, [tabs]);
+  
+  // if (initialIndex != 0) {
+  //   setTimeout(() => {
+  //     setTabIndex(initialIndex);
+  //   }, 1000);
+  // }
+  
   const [tabIndex, setTabIndex] = useState(initialIndex);
+
+  console.log(tabIndex);
+  
 
   return (
     <MantineProvider theme={{
@@ -91,7 +101,8 @@ function App() {
     }}>
       <div className="main-app">
         <Header items={[]} />
-        <Tabs tabIndex={tabIndex} onTabChange={(i) => {
+        <Tabs initialTab={tabIndex} onTabChange={(i, key) => {
+          console.log(i, key);
           setTabIndex(i);
           // Push to new url
           let url = `/${tabs[i].url}`;
@@ -114,7 +125,7 @@ function App() {
           }
         </Tabs>
 
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </MantineProvider>
   );

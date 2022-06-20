@@ -121,7 +121,7 @@ export default class WebCard extends Component<WebCardProps, WebCardState> {
             }
           }
         }
-      });
+      }) as React.ReactNode;
     }
     return null;
   }
