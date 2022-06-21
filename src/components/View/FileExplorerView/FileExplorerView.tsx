@@ -96,12 +96,12 @@ const api: FileExplorerApi = {
       body: JSON.stringify({
         action: "create-folder",
       }),
-    }).then(res => {
+    }).then(async res => {
       if (res.status === 200) {
         return true;
       }
       else {
-        throw new Error(`Failed to create folder ${path}`);
+        throw new Error(await res.text() || `Failed to create folder ${path}`);
       }
     });
   },
@@ -111,12 +111,12 @@ const api: FileExplorerApi = {
 
     return fetch(`${baseUrl}${path}`, {
       method: "DELETE",
-    }).then(res => {
+    }).then(async res => {
       if (res.status === 200) {
         return true;
       }
       else {
-        throw new Error(`Failed to delete ${path}`);
+        throw new Error(await res.text() || `Failed to delete ${path}`);
       }
     });
   },
