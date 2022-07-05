@@ -1,0 +1,29 @@
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  width: 760px;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 16px;
+  list-style: none;
+  border: #222222 solid 2px;
+  
+  .todo-item {
+    padding: 0 16px;
+    transition: filter 0.2s ease-in-out;
+    filter: brightness(1);
+    &:nth-of-type(odd) {
+      background-color: #222222;
+    }
+    &:hover {
+      background-color: #2b2b2b;
+      cursor: pointer;
+    }
+
+    &.todo-item-checked {
+      text-decoration: line-through;
+      filter: brightness(0.5);
+    }
+  }
+}

@@ -327,7 +327,7 @@ namespace Api {
   }
 
   export async function login(username: string, password: string) {
-    return await _post<string>("/user/login", { username, password });
+    return await _post<IUser>("/user/login", { username, password });
   }
 
   export async function getUptime() {
@@ -372,6 +372,90 @@ namespace Api {
      */
     export async function update() {
       return await _post<void>("/docker/update");
+    }
+  }
+
+  export interface IUser {
+    id: number;
+    username: string;
+    accessToken: string;
+  }
+
+  export class User {
+    id: number;
+    username: string;
+    accessToken: string;
+
+    constructor(user: IUser) {
+      this.id = user.id;
+      this.username = user.username;
+      this.accessToken = user.accessToken;
+    }
+
+    public static getLocalUser() {
+      return localStorage.getItem("user") ? new User(JSON.parse(localStorage.getItem("user") || "")) : null;
+    }
+
+    public static getToken() {
+      return User.getLocalUser()
+    }
+  }
+
+  export interface ITodo {
+    id?: number;
+    title: string;
+    description: string;
+    dueDate?: Date;
+    completed?: boolean;
+    parentId?: number;
+    orderIndex?: number;
+    subTasks?: Todo[];
+  }
+
+  export class Todo {
+    public id: number;
+    public title: string;
+    public description: string;
+    public dueDate?: Date;
+    public completed: boolean;
+    public orderIndex: number;
+    public parentId?: number;
+
+    public subTasks?: Todo[];
+
+    constructor(todo: ITodo) {
+      Object.assign(this, todo);
+      if (todo.subTasks) {
+        this.subTasks = todo.subTasks?.map(t => new Todo(t)) ?? [];
+      }
+    }
+
+    public static async getAll(includeSubTasks: boolean = false) {
+      return _get<ITodo[]>("/todo", {
+        subTasks: Number(includeSubTasks)
+      }).then(todos => todos.map(t => new Todo(t)));
+    }
+
+    public static async get(id: number) {
+      return _get<ITodo>("/todo/" + id).then(t => new Todo(t));
+    }
+
+    public static async update(todo: Partial<ITodo>) {
+      return _put<ITodo>("/todo/" + todo.id, todo).then(t => new Todo(t));
+    }
+
+    public static async create(todo: ITodo) {
+      return _post<ITodo>("/todo", todo).then(t => new Todo(t));
+    }
+
+    public static async delete(id: number) {
+      return _delete<void>("/todo/" + id);
+    }
+
+    public static async order(todos: Todo[]) {
+      return _put<{
+        success: boolean;
+      }>("/todo/order", todos.map((t, i) => [t.id, i]));
     }
   }
 }

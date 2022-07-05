@@ -8898,6 +8898,11 @@ tabler-icons-react@^1.48.1:
   resolved "https://registry.yarnpkg.com/tabler-icons-react/-/tabler-icons-react-1.49.0.tgz#9f01283fa9422e8946ccc9c43b402b364f7666e8"
   integrity sha512-e6gWcqN2WNN9MZE04uA1t9/u7+GzEZnIPB2grGOtJnFrU+FkJ0mV5ezcUQx/HIypoePmzlp8c9uEB1Kfg68UgQ==
 
+tabler-icons-react@^1.52.0:
+  version "1.52.0"
+  resolved "https://registry.yarnpkg.com/tabler-icons-react/-/tabler-icons-react-1.52.0.tgz#c125ecfe497d45e40e55a5f3ad5d7dbcdeb69945"
+  integrity sha512-WLsTMiIS7ERdpOX0xH3fPjL3XLjkLCpxXG0SipV6e4T7TLU2ZhdpBeTnAx4DYw7oM3zPDSphDVfP2MfqgIIfog==
+
 tailwindcss@^3.0.2:
   version "3.0.23"
   resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-3.0.23.tgz#c620521d53a289650872a66adfcb4129d2200d10"

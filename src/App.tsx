@@ -1,17 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import "./App.scss";
 import { MantineProvider, Tab, Tabs } from "@mantine/core";
 import Api from "./api/Api";
 import { isEditMode } from "./helper";
-import { Footer } from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
 import WebcardsView from "./components/View/WebcardsView/WebcardsView";
 import ServerStatusView from "./components/View/ServerStatusView/ServerStatusView";
 import FileExplorerView from "./components/View/FileExplorerView/FileExplorerView";
 import fontAwesome from "@fortawesome/fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useForceUpdate } from "@mantine/hooks";
+import TodoListView from "./components/View/TodoListView/TodoListView";
+import { NotificationsProvider } from "@mantine/notifications";
 
 (fontAwesome.library.add as any)(faPlus);
 
@@ -20,7 +20,7 @@ let isMemoryMode: boolean;
 
 function App() {
   const update = useForceUpdate();
-  const [customTabs, setCustomTabs] = useState<TabContext[]>(null);
+  const [customTabs, /*setCustomTabs*/] = useState<TabContext[]>(null);
 
   if (isMemoryMode === undefined) {
     isMemoryMode = null; // So it only runs once
@@ -56,6 +56,11 @@ function App() {
       url: "file-explorer",
       view: <FileExplorerView />
     },
+    {
+      title: "To-do list",
+      url: "todo-list",
+      view: <TodoListView />
+    },
     ...(customTabs || [])  // Add custom tabs
   ];
 
@@ -78,55 +83,54 @@ function App() {
   //   setCustomTabs(_customTabs);
   // }
 
-  const initialIndex = useMemo(() => {
+  const initialIndex = (() => {
     const cat = window.location.pathname.split("/")[1];
     const index = tabs.findIndex(t => t.url === cat);
     return index === -1 ? 0 : index;
-  }, [tabs]);
-  
+  })();
+
   // if (initialIndex != 0) {
   //   setTimeout(() => {
   //     setTabIndex(initialIndex);
   //   }, 1000);
   // }
-  
-  const [tabIndex, setTabIndex] = useState(initialIndex);
 
-  console.log(tabIndex);
-  
+  const [tabIndex, setTabIndex] = useState(initialIndex);
 
   return (
     <MantineProvider theme={{
       colorScheme: "dark"
     }}>
-      <div className="main-app">
-        <Header items={[]} />
-        <Tabs initialTab={tabIndex} onTabChange={(i, key) => {
-          console.log(i, key);
-          setTabIndex(i);
-          // Push to new url
-          let url = `/${tabs[i].url}`;
-          // Check edit mode
-          if (editMode) {
-            url += "/edit";
-          }
-          window.history.pushState({}, "", url);
-        }}>
-          {
-            tabs.map((tab, i) => (
-              <Tab title={tab.title} label={tab.icon ?? tab.title} key={tab.title} color={tab.color}
-                style={{
-                  color: tab.color
-                }}
-              >
-                {tab.view}
-              </Tab>
-            ))
-          }
-        </Tabs>
+      <NotificationsProvider>
+        <div className="main-app">
+          <Header items={[]} />
+          <Tabs initialTab={tabIndex} onTabChange={(i, key) => {
+            console.log(i, key);
+            setTabIndex(i);
+            // Push to new url
+            let url = `/${tabs[i].url}`;
+            // Check edit mode
+            if (editMode) {
+              url += "/edit";
+            }
+            window.history.pushState({}, "", url);
+          }}>
+            {
+              tabs.map((tab, i) => (
+                <Tab title={tab.title} label={tab.icon ?? tab.title} key={tab.title} color={tab.color}
+                  style={{
+                    color: tab.color
+                  }}
+                >
+                  {tab.view}
+                </Tab>
+              ))
+            }
+          </Tabs>
 
-        {/* <Footer /> */}
-      </div>
+          {/* <Footer /> */}
+        </div>
+      </NotificationsProvider>
     </MantineProvider>
   );
 }
