@@ -2,6 +2,7 @@ import { isDev } from "../helper";
 import { WebCard, WebCardCreateModel, WebCardModel } from "../models/WebCard";
 import { ImageModel } from "../models/Image";
 import { DirectoryEntryData } from "../components/FileExplorer/DirectoryEntry";
+import { Action, ActionCreateModel, ActionModel } from "../models/Action";
 
 namespace Api {
 
@@ -45,7 +46,7 @@ namespace Api {
   // Fetch methods
   //
 
-  export async function _post<T = any>(url: string, body?: any): Promise<T> {
+  export async function _post<T = any>(url: string, body?: any, handleOk?: HandleOk<T>): Promise<T> {
     const isFormData = body instanceof FormData;
     const bearer = localStorage.getItem("token");
     const res = await fetch(baseUrlApi + url, {
@@ -58,7 +59,7 @@ namespace Api {
       body: isFormData ? body : (body ? JSON.stringify(body) : null)
     });
 
-    return handleResponse<T>(res);
+    return handleOk ? handleOk(res) : handleResponse<T>(res);
   }
 
   export async function _put<T = any>(url: string, body?: any): Promise<T> {
@@ -297,6 +298,27 @@ namespace Api {
     return await _delete<void>("/webcard/" + id);
   }
 
+  // Create and manage Actions
+  export async function createAction(action: ActionCreateModel): Promise<Action> {
+    return await _post<ActionModel>("/action", action).then(action => new Action(action));
+  }
+
+  export async function getActions(): Promise<Action[]> {
+    return await _get<ActionModel[]>("/action").then(actions => actions.map(action => new Action(action)));
+  }
+
+  export async function updateAction(action: Action): Promise<Action> {
+    return await _put<ActionModel>("/action/" + action.id, action).then(action => new Action(action));
+  }
+
+  export async function deleteAction(id: number): Promise<void> {
+    return await _delete<void>("/action/" + id);
+  }
+
+  export async function triggerAction(id: number): Promise<string> {
+    return await _post<string>("/action/" + id + "/trigger", {}, res => res.text());
+  }
+  
   export interface SqlDialects {
     mysql: {
       host: string;

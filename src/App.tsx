@@ -12,6 +12,7 @@ import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useForceUpdate } from "@mantine/hooks";
 import TodoListView from "./components/View/TodoListView/TodoListView";
 import { NotificationsProvider } from "@mantine/notifications";
+import ActionsView from "./components/View/ActionsView/ActionsView";
 
 (fontAwesome.library.add as any)(faPlus);
 
@@ -60,6 +61,11 @@ function App() {
       title: "To-do list",
       url: "todo-list",
       view: <TodoListView />
+    },
+    {
+      title: "Actions",
+      url: "actions",
+      view: <ActionsView />
     },
     ...(customTabs || [])  // Add custom tabs
   ];
