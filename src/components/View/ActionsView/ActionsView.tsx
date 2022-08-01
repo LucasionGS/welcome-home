@@ -48,6 +48,8 @@ function ActionCard(props: { action: Action, actions: Action[], setActions: (act
       <Paper withBorder style={{
         backgroundColor: output === null ? "#ffaaaa" : output === undefined ? "gray" : "#aaffaa",
         transition: "background-color 0.5s",
+        overflow: "hidden",
+        borderRadius: "0.5rem",
       }}>
 
         {
@@ -62,7 +64,7 @@ function ActionCard(props: { action: Action, actions: Action[], setActions: (act
                   setLoading(false);
                   setOutput(res);
                 }} action={action} component={(onClick, onSecondaryClick) => (
-                  <Image onContextMenu={!editMode ? onSecondaryClick : null} onClick={!editMode ? onClick : null} height={128} width={128} src={action.getImageUrl()} style={{ cursor: "pointer" }} />
+                  <Image title={action.title} onContextMenu={!editMode ? onSecondaryClick : null} onClick={!editMode ? onClick : null} height={128} width={128} src={action.getImageUrl()} style={{ cursor: "pointer" }} />
                 )} />
               ) :
               (
